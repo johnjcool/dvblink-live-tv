@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="DVBLink Settings">
+
+    <PreferenceCategory android:title="Audio and Video">
+        <ListPreference
+            android:key="buffer_playback_ms"
+            android:title="Buffer Duration"
+            android:dialogTitle="Buffer Seconds"
+            android:entries="@array/buffer_playback_ms_names"
+            android:entryValues="@array/buffer_playback_ms_values"
+            android:defaultValue="@string/pref_default_buffer_playback_ms"
+            android:summary="How many seconds to buffer before starting playback"/>
+
+        <CheckBoxPreference
+            android:key="audio_passthrough_decodeder_enabled"
+            android:title="Enable Audio Passthrough"
+            android:defaultValue="@bool/pref_default_audio_passthrough_decodeder_enabled"
+            android:summary="You must also ensure the system audio settings allows passthrough"/>
+
+        <CheckBoxPreference
+            android:key="audio_tunneling_enabled"
+            android:title="Enable Audio Tunneling"
+            android:defaultValue="@bool/pref_default_audio_tunneling_enabled"
+            android:summary="Enable support for DSP audio tunneling"/>
+
+        <CheckBoxPreference
+            android:key="ffmpeg_audio_enabled"
+            android:title="Enable FFMpeg Audio Codecs"
+            android:defaultValue="@bool/pref_default_audio_ffmpeg_audio_enabled"/>
+
+        <CheckBoxPreference
+            android:key="captions_apply_embedded_styles"
+            android:title="Apply embedded caption styles"
+            android:defaultValue="@bool/pref_default_captions_apply_embedded_styles"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="EPG">
+        <CheckBoxPreference
+            android:key="epg_sync_enabled"
+            android:title="Enable EPG Sync"
+            android:defaultValue="@bool/pref_default_epg_sync_enabled" />
+        <ListPreference
+            android:key="epg_max_time"
+            android:title="EPG Sync Duration"
+            android:dialogTitle="EPG Sync Duration"
+            android:entries="@array/epg_max_time_names"
+            android:entryValues="@array/epg_max_time_values"
+            android:defaultValue="@string/pref_default_epg_max_time"
+            android:summary="Amount of EPG data to sync"/>
+        <CheckBoxPreference
+            android:key="epg_last_update_enabled"
+            android:title="Enable Last Update Time Optimization"
+            android:summary="Disable if you see gaps in EPG data"
+            android:defaultValue="@bool/pref_default_epg_last_update_enabled" />
+        <CheckBoxPreference
+            android:key="epg_default_poster_art_enabled"
+            android:title="Enable EPG Default Poster Art"
+            android:summary="Enable if EPG data provider does not include poster art"
+            android:defaultValue="@bool/pref_default_epg_default_poster_art_enabled" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Advanced Settings">
+        <CheckBoxPreference
+            android:key="shield_workaround_enabled"
+            android:title="Enable nVidia Shield Workaround"
+            android:defaultValue="@bool/pref_default_shield_workaround_enabled" />
+
+        <CheckBoxPreference
+            android:key="debug_text_view_enabled"
+            android:title="Enable Debug Text View"
+            android:defaultValue="@bool/pref_default_debug_text_view_enabled" />
+
+        <CheckBoxPreference
+            android:key="timeshift_enabled"
+            android:title="Enable timeshift support"
+            android:summary="DO NOT ENABLE THIS"
+            android:defaultValue="@bool/pref_default_timeshift_enabled"/>
+
+        <CheckBoxPreference
+            android:key="dvr_enabled"
+            android:title="Enable DVR support"
+            android:summary="DO NOT ENABLE THIS"
+            android:defaultValue="@bool/pref_default_dvr_enabled"/>
+    </PreferenceCategory>
+
+</PreferenceScreen>
