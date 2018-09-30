@@ -1,7 +1,6 @@
 package io.github.johnjcool.dvblink.live.tv.tv.service;
 
 import android.annotation.TargetApi;
-import android.content.ComponentName;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.media.tv.TvContentRating;
@@ -27,6 +26,7 @@ import com.bumptech.glide.request.target.Target;
 import com.google.android.media.tv.companionlibrary.BaseTvInputService;
 import com.google.android.media.tv.companionlibrary.model.Advertisement;
 import com.google.android.media.tv.companionlibrary.model.Channel;
+import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.Program;
 import com.google.android.media.tv.companionlibrary.model.RecordedProgram;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
@@ -248,21 +248,24 @@ public class TvInputService extends BaseTvInputService {
         @Override
         public boolean onPlayProgram(Program program, long startPosMs) {
             if (program == null) {
-                requestEpgSync(getCurrentChannelUri());
-                notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING);
-                return false;
+                Log.d(TAG, "Play only channel " + mCurrentChannel.getDisplayName());
+                return play(mCurrentChannel.getInternalProviderData());
             }
             mCurrentProgram = program;
+            Log.d(TAG, "Play program " + program.getTitle());
+            return play(program.getInternalProviderData());
+        }
 
-            Log.d(TAG, "Play program " + program.getTitle() + " " +
-                    program.getInternalProviderData().getVideoUrl());
-            if (program.getInternalProviderData().getVideoUrl() == null) {
+        private boolean play(InternalProviderData internalProviderData) {
+            Log.d(TAG, "Play url " +
+                    internalProviderData.getVideoUrl());
+            if (internalProviderData.getVideoUrl() == null) {
                 Toast.makeText(mContext, getString(R.string.msg_no_url_found), Toast.LENGTH_SHORT).show();
                 notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_UNKNOWN);
                 return false;
             } else {
-                createPlayer(program.getInternalProviderData().getVideoType(),
-                        Uri.parse(program.getInternalProviderData().getVideoUrl()));
+                createPlayer(internalProviderData.getVideoType(),
+                        Uri.parse(internalProviderData.getVideoUrl()));
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     notifyTimeShiftStatusChanged(TvInputManager.TIME_SHIFT_STATUS_AVAILABLE);
                 }
@@ -377,15 +380,15 @@ public class TvInputService extends BaseTvInputService {
             releasePlayer();
         }
 
-        private void requestEpgSync(final Uri channelUri) {
-            EpgSyncJobService.requestImmediateSync(TvInputService.this, mInputId, EpgSyncJobService.DEFAULT_IMMEDIATE_EPG_DURATION_MILLIS,
-                    new ComponentName(TvInputService.this, EpgSyncJobService.class));
-            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    onTune(channelUri);
-                }
-            }, EPG_SYNC_DELAYED_PERIOD_MS);
-        }
+//        private void requestEpgSync(final Uri channelUri) {
+//            EpgSyncJobService.requestImmediateSync(TvInputService.this, mInputId,
+//                    new ComponentName(TvInputService.this, EpgSyncJobService.class));
+//            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    onTune(channelUri);
+//                }
+//            }, EPG_SYNC_DELAYED_PERIOD_MS);
+//        }
     }
 }

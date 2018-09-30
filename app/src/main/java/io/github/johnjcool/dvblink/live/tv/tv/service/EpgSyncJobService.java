@@ -12,7 +12,6 @@ import com.google.android.media.tv.companionlibrary.model.Program;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -24,7 +23,6 @@ import io.github.johnjcool.dvblink.live.tv.remote.model.response.StreamInfo;
 public class EpgSyncJobService extends com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService {
 
     private static final String TAG = EpgSyncJobService.class.getName();
-    public static final long DEFAULT_IMMEDIATE_EPG_DURATION_MILLIS = 1000 * 60 * 60; // 1 Hour
 
     private DvbLinkClient client;
     private SharedPreferences sharedPreferences;
@@ -48,8 +46,12 @@ public class EpgSyncJobService extends com.google.android.media.tv.companionlibr
             Function<io.github.johnjcool.dvblink.live.tv.remote.model.response.Channel, Channel> channelTransform =
                     new Function<io.github.johnjcool.dvblink.live.tv.remote.model.response.Channel, Channel>() {
                         public Channel apply(io.github.johnjcool.dvblink.live.tv.remote.model.response.Channel channel) {
+                            int originalNetworkId = channel.getDvbLinkId();
+
                             InternalProviderData internalProviderData = new InternalProviderData();
                             internalProviderData.setRepeatable(false);
+                            internalProviderData.setVideoType(TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE);
+                            internalProviderData.setVideoUrl(getProgramVideoSrc(Long.valueOf(originalNetworkId)));
 
                             String serviceType = TvContract.Channels.SERVICE_TYPE_AUDIO_VIDEO;
                             if (channel.getType() == io.github.johnjcool.dvblink.live.tv.remote.model.response.Channel.Type.RD_CHANNEL_RADIO) {
@@ -62,7 +64,7 @@ public class EpgSyncJobService extends com.google.android.media.tv.companionlibr
                             Channel.Builder builder = new Channel.Builder()
                                     .setDisplayName(channel.getName())
                                     .setDisplayNumber(String.valueOf(channel.getNumber()))
-                                    .setOriginalNetworkId(channel.getDvbLinkId())
+                                    .setOriginalNetworkId(originalNetworkId)
                                     .setServiceType(serviceType)
                                     .setChannelLogo(getChannelLogo(channel.getChannelLogo()))
                                     .setInternalProviderData(internalProviderData)
@@ -93,15 +95,6 @@ public class EpgSyncJobService extends com.google.android.media.tv.companionlibr
             Function<io.github.johnjcool.dvblink.live.tv.remote.model.response.Program, Program> programTransform =
                     new Function<io.github.johnjcool.dvblink.live.tv.remote.model.response.Program, Program>() {
                         public Program apply(io.github.johnjcool.dvblink.live.tv.remote.model.response.Program program) {
-                            InternalProviderData internalProviderData = new InternalProviderData();
-                            internalProviderData.setVideoType(TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE);
-                            internalProviderData.setVideoUrl(getProgramVideoSrc(Long.valueOf(channel.getOriginalNetworkId())));
-
-                            Log.d(TAG,"Start Time in Seconds: " + program.getStartTime());
-                            Log.d(TAG,"End Time in Seconds: " + (program.getStartTime() + program.getDuration()));
-                            Log.d(TAG,new Date(program.getStartTime()*1000).toString());
-                            Log.d(TAG,new Date((program.getStartTime() + program.getDuration())*1000).toString());
-
                             return new Program.Builder()
                                     .setChannelId(channel.getId())
                                     .setTitle(program.getName())
@@ -118,7 +111,7 @@ public class EpgSyncJobService extends com.google.android.media.tv.companionlibr
                                     // where TvInputService can store anything it wants. Here, we store
                                     // video type and video URL so that TvInputService can play the
                                     // video later with this field.
-                                    .setInternalProviderData(internalProviderData)
+                                    .setInternalProviderData(channel.getInternalProviderData())
                                     .build();
                         }
                     };
@@ -128,6 +121,13 @@ public class EpgSyncJobService extends com.google.android.media.tv.companionlibr
             Log.e(TAG, "Failed to get programs", e);
         }
         return null;
+    }
+
+    public boolean shouldUpdateProgramMetadata(Program oldProgram, Program newProgram) {
+        if (oldProgram == null || newProgram == null) {
+            return false;
+        }
+        return super.shouldUpdateProgramMetadata(oldProgram, newProgram);
     }
 
 

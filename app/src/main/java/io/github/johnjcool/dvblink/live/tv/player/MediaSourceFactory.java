@@ -2,11 +2,11 @@ package io.github.johnjcool.dvblink.live.tv.player;
 
 import android.content.Context;
 import android.net.Uri;
-import android.os.Handler;
 import android.text.TextUtils;
 
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
+import com.google.android.exoplayer2.extractor.ts.DefaultTsPayloadReaderFactory;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.dash.DashMediaSource;
@@ -21,10 +21,6 @@ import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.util.Util;
 
-/**
- * Created by guest1 on 12/23/2016.
- */
-
 public class MediaSourceFactory {
     private static final DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
 
@@ -35,34 +31,31 @@ public class MediaSourceFactory {
     public static MediaSource getMediaSourceFor(Context context, Uri mediaUri,
             String overrideExtension) {
         // Measures bandwidth during playback. Can be null if not required.
-        DataSource.Factory mediaDataSourceFactory = buildDataSourceFactory(context, true);
+        DataSource.Factory mediaDataSourceFactory = buildHttpDataSourceFactory(context, true);
 
         int type = Util.inferContentType(!TextUtils.isEmpty(overrideExtension) ?
                 "." + overrideExtension
                 : mediaUri.getLastPathSegment());
-        Handler mainHandler = new Handler();
         switch (type) {
             case C.TYPE_SS:
-                return new SsMediaSource(mediaUri, buildDataSourceFactory(context, false),
-                        new DefaultSsChunkSource.Factory(mediaDataSourceFactory),
-                        mainHandler, null);
+                return new SsMediaSource.Factory(new DefaultSsChunkSource.Factory(mediaDataSourceFactory),
+                        buildHttpDataSourceFactory(context, false)).createMediaSource(mediaUri);
             case C.TYPE_DASH:
-                return new DashMediaSource(mediaUri, buildDataSourceFactory(context, false),
-                        new DefaultDashChunkSource.Factory(mediaDataSourceFactory), mainHandler,
-                        null);
+                return new DashMediaSource.Factory(new DefaultDashChunkSource.Factory(mediaDataSourceFactory),
+                        buildHttpDataSourceFactory(context, false)).createMediaSource(mediaUri);
             case C.TYPE_HLS:
-                return new HlsMediaSource(mediaUri, mediaDataSourceFactory, mainHandler,
-                        null);
+                return new HlsMediaSource.Factory(mediaDataSourceFactory).createMediaSource(mediaUri);
             case C.TYPE_OTHER:
-                return new ExtractorMediaSource(mediaUri, mediaDataSourceFactory,
-                        new DefaultExtractorsFactory(), mainHandler, null);
+                return new ExtractorMediaSource.Factory(mediaDataSourceFactory)
+                        .setExtractorsFactory( new DefaultExtractorsFactory().setTsExtractorFlags(DefaultTsPayloadReaderFactory.FLAG_ALLOW_NON_IDR_KEYFRAMES))
+                        .createMediaSource(mediaUri);
             default: {
                 throw new NotMediaException("Unsupported type: " + type);
             }
         }
     }
 
-    private static DataSource.Factory buildDataSourceFactory(Context context,
+    private static DataSource.Factory  buildDataSourceFactory(Context context,
             boolean useBandwidthMeter) {
         return buildDataSourceFactory(context, useBandwidthMeter ? BANDWIDTH_METER : null);
     }

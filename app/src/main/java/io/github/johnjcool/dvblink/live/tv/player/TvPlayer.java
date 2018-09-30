@@ -11,12 +11,14 @@ import android.view.Surface;
 
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.DefaultLoadControl;
+import com.google.android.exoplayer2.DefaultRenderersFactory;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.LoadControl;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
+import com.google.android.exoplayer2.RenderersFactory;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.source.MediaSource;
@@ -40,16 +42,24 @@ public class TvPlayer implements com.google.android.media.tv.companionlibrary.Tv
     private SimpleExoPlayer mSimpleExoPlayer;
     private float mPlaybackSpeed;
     private Context mContext;
+    private EventLogger mEventLogger;
 
     public TvPlayer(Context context) {
-        this(context,  new DefaultTrackSelector(), new DefaultLoadControl());
+        this(context, new DefaultRenderersFactory(context, DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON),  new DefaultTrackSelector(), new DefaultLoadControl());
     }
 
-    public TvPlayer(Context context, TrackSelector trackSelector, LoadControl loadControl) {
-        mSimpleExoPlayer = ExoPlayerFactory.newSimpleInstance(context, trackSelector, loadControl);
+    public TvPlayer(Context context, RenderersFactory renderersFactory, TrackSelector trackSelector, LoadControl loadControl) {
         mContext = context;
+
+        mSimpleExoPlayer = ExoPlayerFactory.newSimpleInstance(renderersFactory, trackSelector, loadControl);
         mSimpleExoPlayer.addListener(this);
         mSimpleExoPlayer.setVideoScalingMode(C.VIDEO_SCALING_MODE_SCALE_TO_FIT);
+
+        // Add the EventLogger
+        mEventLogger = new EventLogger(trackSelector);
+        mSimpleExoPlayer.addListener(mEventLogger);
+        mSimpleExoPlayer.addAudioDebugListener(mEventLogger);
+        mSimpleExoPlayer.addVideoDebugListener(mEventLogger);
     }
 
     @Override
