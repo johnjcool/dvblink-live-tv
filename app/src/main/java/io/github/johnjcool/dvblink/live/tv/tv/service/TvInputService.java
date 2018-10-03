@@ -61,7 +61,7 @@ public class TvInputService extends BaseTvInputService {
     @Nullable
     @Override
     public TvInputService.RecordingSession onCreateRecordingSession(String inputId) {
-        return null;
+        return new io.github.johnjcool.dvblink.live.tv.tv.service.RecordingSession(this, inputId);
     }
 
     class LiveTvInputSession extends BaseTvInputService.Session {
@@ -320,6 +320,8 @@ public class TvInputService extends BaseTvInputService {
         public void onSetCaptionEnabled(boolean enabled) {
             // Captions currently unsupported
         }
+
+
 
         @Override
         public void onPlayAdvertisement(Advertisement advertisement) {
