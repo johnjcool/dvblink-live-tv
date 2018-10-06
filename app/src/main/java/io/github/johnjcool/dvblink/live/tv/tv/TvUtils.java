@@ -9,7 +9,11 @@ import android.media.tv.TvContract;
 import android.net.Uri;
 import android.util.Log;
 
-import com.google.android.media.tv.companionlibrary.model.Channel;
+import com.google.android.media.tv.companionlibrary.model.ModelUtils;
+import com.google.android.media.tv.companionlibrary.model.Program;
+
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.github.johnjcool.dvblink.live.tv.Constants;
 
@@ -55,6 +59,14 @@ public class TvUtils {
         }
     }
 
+    public static long transformToMillis(long seconds) {
+        return TimeUnit.MILLISECONDS.convert(seconds, TimeUnit.SECONDS);
+    }
+
+    public static long transformToSeconds(long milliseconds) {
+        return TimeUnit.SECONDS.convert(milliseconds, TimeUnit.MILLISECONDS);
+    }
+
     public static String getInputId() {
         ComponentName componentName = new ComponentName(
                 "io.github.johnjcool.dvblink.live.tv",
@@ -63,19 +75,18 @@ public class TvUtils {
         return TvContract.buildInputId(componentName);
     }
 
-    public static Channel getChannel(Context context, Uri channelUri) {
-        ContentResolver resolver = context.getContentResolver();
-        Cursor cursor = resolver.query(channelUri, Channel.PROJECTION, null, null, null);
-        try {
-            if (cursor != null && cursor.moveToNext()) {
-                return Channel.fromCursor(cursor);
-            }
-            Log.w("TvContractUtils", (new StringBuilder()).append("No channel matches ").append(channelUri).toString());
+
+    public static Program getRecordingProgram(ContentResolver resolver, Uri channelUri, Uri programUri) {
+        List<Program> programs = ModelUtils.getPrograms(resolver, channelUri);
+        if (programs == null) {
             return null;
-        } finally {
-            if (cursor != null) {
-                cursor.close();
+        }
+        long l = Long.valueOf(programUri.getLastPathSegment()).longValue();
+        for (Program program : programs) {
+            if (program.getId() == l) {
+                return program;
             }
         }
+        return null;
     }
 }

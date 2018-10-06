@@ -27,9 +27,6 @@ public class SearchEpg implements Serializable {
     @JsonProperty("genre_mask")
     private long genreMask;
 
-    public SearchEpg() {
-    }
-
     public SearchEpg(List<String> channelIds, long startTime, long endTime) {
         this.channelIds = channelIds;
         this.startTime = startTime;

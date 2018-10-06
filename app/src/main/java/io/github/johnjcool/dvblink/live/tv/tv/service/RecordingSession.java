@@ -1,179 +1,111 @@
 
 package io.github.johnjcool.dvblink.live.tv.tv.service;
 
+import android.content.ContentResolver;
 import android.content.Context;
+import android.media.tv.TvInputManager;
 import android.net.Uri;
 import android.util.Log;
 
 import com.google.android.media.tv.companionlibrary.BaseTvInputService;
 import com.google.android.media.tv.companionlibrary.model.Channel;
+import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
+import com.google.android.media.tv.companionlibrary.model.ModelUtils;
 import com.google.android.media.tv.companionlibrary.model.Program;
 import com.google.android.media.tv.companionlibrary.model.RecordedProgram;
-import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
+import java.util.concurrent.TimeUnit;
+
+import io.github.johnjcool.dvblink.live.tv.Application;
+import io.github.johnjcool.dvblink.live.tv.remote.model.request.Schedule;
+import io.github.johnjcool.dvblink.live.tv.remote.model.response.RecordedTV;
+import io.github.johnjcool.dvblink.live.tv.remote.model.response.Recording;
 import io.github.johnjcool.dvblink.live.tv.tv.TvUtils;
 
 class RecordingSession extends BaseTvInputService.RecordingSession {
 
-    private static final boolean DEBUG = true;
+    private static final long DEFAULT_CHANNEL_RECORDING_DURATION = TimeUnit.HOURS.convert(1, TimeUnit.SECONDS);
+
     private static final String TAG = RecordingSession.class.getSimpleName();
     private Channel mChannel;
     private Uri mChannelUri;
     private Context mContext;
     private String mInputId;
-    private int mRecordId;
-    private String mVBoxChannelId;
+    private Recording mRecording;
 
-    public RecordingSession(Context context, String s) {
-        super(context, s);
-        mInputId = s;
+    public RecordingSession(Context context, String inputId) {
+        super(context, inputId);
+        mInputId = inputId;
         mContext = context;
     }
 
-//    private void createRecordedChannel(final Channel channelToRecord) {
-//        VBoxApp.getDeviceManager().getRecordingStatus(mRecordId, new com.vboxcomm.android.tvinput.vbox.response.Callback.Get() {
-//
-//            final RecordingSession this$0;
-//            final Channel val$channelToRecord;
-//
-//            public void onResult(Status status, RecordingStatus recordingstatus) {
-//                if (status != null) {
-//                    notifyError(0);
-//                    Log.d(RecordingSession.TAG, (new StringBuilder()).append("createRecordedChannel: ,onResult: ").append(status.getDescription()).toString());
-//                    return;
-//                }
-//                long l = VBoxUtils.getTimeInMillisFromVBoxTime(recordingstatus.startTime);
-//                long l1 = VBoxUtils.getTimeInMillisFromVBoxTime(recordingstatus.endTime);
-//                InternalProviderData internalproviderdata = channelToRecord.getInternalProviderData();
-//                internalproviderdata.setVideoUrl(recordingstatus.url);
-//                internalproviderdata.setRecordingStartTime(l);
-//                try {
-//                    internalproviderdata.put("vbox_record_id", Integer.valueOf(mRecordId));
-//                    internalproviderdata.put("vbox_record_size", Long.valueOf(recordingstatus.fileSize));
-//                }
-//                // Misplaced declaration of an exception variable
-//                catch (Status status) {
-//                    Log.w(RecordingSession.TAG, (new StringBuilder()).append("onRecord: unable to set recording id: ").append(mRecordId).toString(), status);
-//                }
-//                status = null;
-//                if (!TextUtils.isEmpty(channelToRecord.getChannelLogo())) {
-//                    status = TvContract.buildChannelLogoUri(channelToRecord.getId()).toString();
-//                }
-//                status = (new com.google.android.media.tv.companionlibrary.model.RecordedProgram.Builder()).setInputId(mInputId).setRecordingDataUri(recordingstatus.url).setRecordingDurationMillis(l1 - l).setStartTimeUtcMillis(l).setEndTimeUtcMillis(l1).setInternalProviderData(internalproviderdata).setTitle(mChannel.getDisplayName()).setThumbnailUri(status).build();
-//                notifyRecordingStopped(status);
-//            }
-//
-//            public volatile void onResult(Status status, Object obj) {
-//                onResult(status, (RecordingStatus) obj);
-//            }
-//
-//
-//            {
-//                this$0 = RecordingSession.this;
-//                channelToRecord = channel;
-//                super();
-//            }
-//        });
-//    }
-//
-//    private void createRecordedProgram(final Program programToRecord) {
-//        VBoxApp.getDeviceManager().getRecordingStatus(mRecordId, new com.vboxcomm.android.tvinput.vbox.response.Callback.Get() {
-//
-//            final RecordingSession this$0;
-//            final Program val$programToRecord;
-//
-//            public void onResult(Status status, RecordingStatus recordingstatus) {
-//                if (status != null) {
-//                    notifyError(0);
-//                    Log.d(RecordingSession.TAG, (new StringBuilder()).append("createRecordedProgram, onResult: ").append(status.getDescription()).toString());
-//                    return;
-//                }
-//                long l = VBoxUtils.getTimeInMillisFromVBoxTime(recordingstatus.startTime);
-//                long l1 = VBoxUtils.getTimeInMillisFromVBoxTime(recordingstatus.endTime);
-//                status = programToRecord.getInternalProviderData();
-//                status.setVideoUrl(recordingstatus.url);
-//                status.setRecordingStartTime(l);
-//                try {
-//                    status.put("vbox_record_id", Integer.valueOf(mRecordId));
-//                    status.put("vbox_record_size", Long.valueOf(recordingstatus.fileSize));
-//                } catch (com.google.android.media.tv.companionlibrary.model.InternalProviderData.ParseException parseexception) {
-//                    Log.w(RecordingSession.TAG, (new StringBuilder()).append("onRecord: unable to set recording id: ").append(mRecordId).toString(), parseexception);
-//                }
-//                status = (new com.google.android.media.tv.companionlibrary.model.RecordedProgram.Builder(programToRecord)).setInputId(mInputId).setRecordingDataUri(recordingstatus.url).setRecordingDurationMillis(l1 - l).setStartTimeUtcMillis(l).setEndTimeUtcMillis(l1).setInternalProviderData(status).build();
-//                notifyRecordingStopped(status);
-//            }
-//
-//            public volatile void onResult(Status status, Object obj) {
-//                onResult(status, (RecordingStatus) obj);
-//            }
-//
-//
-//            {
-//                this$0 = RecordingSession.this;
-//                programToRecord = program;
-//                super();
-//            }
-//        });
-//    }
-//
-//    private void startChannelRecording() {
-//        VBoxApp.getDeviceManager().startRecording(mVBoxChannelId, new com.vboxcomm.android.tvinput.vbox.response.Callback.Get() {
-//
-//            final RecordingSession this$0;
-//
-//            public void onResult(Status status, com.vboxcomm.android.tvinput.vbox.response.RecordResponse.RecordId recordid) {
-//                if (status != null) {
-//                    notifyError(0);
-//                    Log.d(RecordingSession.TAG, (new StringBuilder()).append("startChannelRecording: ,onResult: ").append(status.getDescription()).toString());
-//                    return;
-//                } else {
-//                    mRecordId = recordid.recordId;
-//                    return;
-//                }
-//            }
-//
-//            public volatile void onResult(Status status, Object obj) {
-//                onResult(status, (com.vboxcomm.android.tvinput.vbox.response.RecordResponse.RecordId) obj);
-//            }
-//
-//
-//            {
-//                this$0 = RecordingSession.this;
-//                super();
-//            }
-//        });
-//    }
-//
-//    private void startProgramRecording(Program program) {
-//        String s = VBoxUtils.getVBoxXmlTvTime(program.getStartTimeUtcMillis());
-//        String s1 = Uri.decode(program.getTitle());
-//        Log.d(TAG, (new StringBuilder()).append("onStartRecording: ").append(mVBoxChannelId).append(", program title: ").append(program.getTitle()).append(", startTime: ").toString());
-//        VBoxApp.getDeviceManager().startRecordingProgram(mVBoxChannelId, s1, s, new com.vboxcomm.android.tvinput.vbox.response.Callback.Get() {
-//
-//            final RecordingSession this$0;
-//
-//            public void onResult(Status status, com.vboxcomm.android.tvinput.vbox.response.RecordResponse.RecordId recordid) {
-//                if (status != null) {
-//                    notifyError(0);
-//                    Log.d(RecordingSession.TAG, (new StringBuilder()).append("startChannelRecording: ,onResult: ").append(status.getDescription()).toString());
-//                    return;
-//                } else {
-//                    mRecordId = recordid.recordId;
-//                    return;
-//                }
-//            }
-//
-//            public volatile void onResult(Status status, Object obj) {
-//                onResult(status, (com.vboxcomm.android.tvinput.vbox.response.RecordResponse.RecordId) obj);
-//            }
-//
-//
-//            {
-//                this$0 = RecordingSession.this;
-//                super();
-//            }
-//        });
-//    }
+    private void createRecordedChannel(final Channel channelToRecord) throws Exception {
+        RecordedTV recordedTV = Application.getDvbLinkClient().getRecordedProgram(mRecording.getScheduleId());
+
+        InternalProviderData internalProviderData = channelToRecord.getInternalProviderData();
+        internalProviderData.setVideoUrl(recordedTV.getUrl());
+        internalProviderData.setRecordingStartTime(TvUtils.transformToMillis(recordedTV.getCreationTime()));
+
+        long startTimeUtcMillis = TvUtils.transformToMillis(recordedTV.getCreationTime());
+        long recordingDurationMillis = TvUtils.transformToMillis(recordedTV.getVideoInfo().getDuration());
+        long endTimeUtcMillis = startTimeUtcMillis + recordingDurationMillis;
+
+        RecordedProgram recordedProgram = new RecordedProgram.Builder()
+                .setInputId(mInputId)
+                .setRecordingDataUri(recordedTV.getUrl())
+                .setRecordingDurationMillis(recordingDurationMillis)
+                .setStartTimeUtcMillis(startTimeUtcMillis)
+                .setEndTimeUtcMillis(endTimeUtcMillis)
+                .setInternalProviderData(internalProviderData)
+                .setTitle(String.format("%s - %s", channelToRecord.getDisplayName(), recordedTV.getScheduleName()))
+                .setThumbnailUri(recordedTV.getThumbnail())
+                .build();
+
+        notifyRecordingStopped(recordedProgram);
+    }
+
+    private void createRecordedProgram(final Program programToRecord) throws Exception {
+        RecordedTV recordedTV = Application.getDvbLinkClient().getRecordedProgram(mRecording.getScheduleId());
+
+        programToRecord.getInternalProviderData().setVideoUrl(recordedTV.getUrl());
+        programToRecord.getInternalProviderData().setRecordingStartTime(TvUtils.transformToMillis(recordedTV.getCreationTime()));
+
+        RecordedProgram recordedProgram = new RecordedProgram.Builder(programToRecord)
+                .setInputId(mInputId)
+                .setRecordingDataUri(recordedTV.getUrl())
+                .setThumbnailUri(recordedTV.getThumbnail())
+                .build();
+
+        notifyRecordingStopped(recordedProgram);
+    }
+
+    private void startChannelRecording() {
+        try {
+            // TODO: Disable Channel Recording...
+            Log.d(TAG, (new StringBuilder()).append("startChannelRecording: ").append(mChannel.getDisplayName()).toString());
+            Schedule schedule = new Schedule(new Schedule.Manual(String.valueOf(mChannel.getOriginalNetworkId()),
+                    TvUtils.transformToSeconds(System.currentTimeMillis()),
+                    DEFAULT_CHANNEL_RECORDING_DURATION,
+                    Schedule.DayMask.DAY_MASK_DAILY));
+            mRecording = Application.getDvbLinkClient().addSchedule(schedule);
+            Log.d(TAG, "Recording for channel " + mChannel.getDisplayName() + " successfully scheduled.");
+        } catch (Exception e) {
+            Log.e(TAG, "Exception schedule recording for channel " + mChannel.getDisplayName() + ".\n" + e.fillInStackTrace());
+            notifyError(TvInputManager.RECORDING_ERROR_UNKNOWN);
+        }
+    }
+
+    private void startProgramRecording(Program program) {
+        try {
+            Log.d(TAG, (new StringBuilder()).append("startProgramRecording: ").append(program.getChannelId()).append(", program title: ").append(program.getTitle()).toString());
+            Schedule schedule = new Schedule(new Schedule.ByEpg(String.valueOf(program.getChannelId()), String.valueOf(program.getId())));
+            mRecording = Application.getDvbLinkClient().addSchedule(schedule);
+            Log.d(TAG, "Recording for channel " + mChannel.getDisplayName() + " and programm " + program.getTitle() + " successfully scheduled.");
+        } catch (Exception e) {
+            Log.e(TAG, "Exception schedule recording for channel " + mChannel.getDisplayName() + " and programm " + program.getTitle() + ".\n" + e.fillInStackTrace());
+            notifyError(TvInputManager.RECORDING_ERROR_UNKNOWN);
+        }
+    }
 
     public void notifyRecordingStopped(RecordedProgram recordedprogram) {
         notifyRecordingStopped(mContext.getContentResolver().insert(android.media.tv.TvContract.RecordedPrograms.CONTENT_URI, recordedprogram.toContentValues()));
@@ -183,86 +115,56 @@ class RecordingSession extends BaseTvInputService.RecordingSession {
         Log.d(TAG, "onRelease");
     }
 
-    public void onStartRecording(Uri uri) {
-        super.onStartRecording(uri);
-        Log.d(TAG, (new StringBuilder()).append("onStartRecording: ").append(uri).toString());
-        mChannel = TvUtils.getChannel(mContext, mChannelUri);
-        mVBoxChannelId = VBoxUtils.getVBoxChannelId(mChannel);
-        if (uri != null) {
-            uri = TvContractUtils.getProgram(mContext.getContentResolver(), mChannelUri, uri);
-            if (uri == null) {
-                notifyError(0);
-                return;
+    public void onStartRecording(Uri programUri) {
+        super.onStartRecording(programUri);
+        Log.d(TAG, (new StringBuilder()).append("onStartRecording: ").append(programUri).toString());
+        ContentResolver resolver = mContext.getContentResolver();
+        mChannel = ModelUtils.getChannel(resolver, mChannelUri);
+        if (programUri != null) {
+            Program program = TvUtils.getRecordingProgram(resolver, mChannelUri, programUri);
+            if (program == null) {
+                notifyError(TvInputManager.RECORDING_ERROR_UNKNOWN);
             } else {
-                startProgramRecording(uri);
-                return;
+                startProgramRecording(program);
             }
         } else {
             startChannelRecording();
-            return;
         }
     }
 
     public void onStopRecording(final Program programToRecord) {
-        Log.d(TAG, "onStopRecording");
-        VBoxApp.getDeviceManager().stopRecording(mVBoxChannelId, new com.vboxcomm.android.tvinput.vbox.response.Callback.Get() {
-
-            final RecordingSession this$0;
-            final Program val$programToRecord;
-
-            public void onResult(Status status, com.vboxcomm.android.tvinput.vbox.response.RecordResponse.RecordId recordid) {
-                if (status == null) {
-                    createRecordedProgram(programToRecord);
-                    return;
-                } else {
-                    notifyError(0);
-                    Log.d(RecordingSession.TAG, (new StringBuilder()).append("onStopRecording, recordId: ").append(mVBoxChannelId).append(", ").append(status.getDescription()).toString());
-                    return;
-                }
-            }
-
-            public volatile void onResult(Status status, Object obj) {
-                onResult(status, (com.vboxcomm.android.tvinput.vbox.response.RecordResponse.RecordId) obj);
-            }
-
-
-            {
-                this$0 = RecordingSession.this;
-                programToRecord = program;
-                super();
-            }
-        });
+        try {
+            Log.d(TAG, "onStopRecording");
+            Application.getDvbLinkClient().removeRecording(mRecording.getRecordingId());
+            createRecordedProgram(programToRecord);
+        } catch (Exception e) {
+            Log.e(RecordingSession.TAG, (new StringBuilder())
+                    .append("onStopRecording, program: ")
+                    .append(programToRecord.getTitle())
+                    .append(", channel: ")
+                    .append(mChannel.getDisplayName())
+                    .append("\n")
+                    .append(e)
+                    .toString());
+            notifyError(TvInputManager.RECORDING_ERROR_UNKNOWN);
+        }
     }
 
     public void onStopRecordingChannel(final Channel channelToRecord) {
-        Log.d(TAG, "onStopRecording");
-        VBoxApp.getDeviceManager().stopRecording(mVBoxChannelId, new com.vboxcomm.android.tvinput.vbox.response.Callback.Get() {
-
-            final RecordingSession this$0;
-            final Channel val$channelToRecord;
-
-            public void onResult(Status status, com.vboxcomm.android.tvinput.vbox.response.RecordResponse.RecordId recordid) {
-                if (status == null) {
-                    createRecordedChannel(channelToRecord);
-                    return;
-                } else {
-                    notifyError(0);
-                    Log.d(RecordingSession.TAG, (new StringBuilder()).append("onStopRecordingChannel, recordId: ").append(mRecordId).append(", ").append(status.getDescription()).toString());
-                    return;
-                }
-            }
-
-            public volatile void onResult(Status status, Object obj) {
-                onResult(status, (com.vboxcomm.android.tvinput.vbox.response.RecordResponse.RecordId) obj);
-            }
-
-
-            {
-                this$0 = RecordingSession.this;
-                channelToRecord = channel;
-                super();
-            }
-        });
+        Log.d(TAG, "onStopRecordingChannel");
+        try {
+            Log.d(TAG, "onStopRecording");
+            Application.getDvbLinkClient().removeRecording(mRecording.getRecordingId());
+            createRecordedChannel(channelToRecord);
+        } catch (Exception e) {
+            Log.e(RecordingSession.TAG, (new StringBuilder())
+                    .append("onStopRecording, channel: ")
+                    .append(channelToRecord.getDisplayName())
+                    .append("\n")
+                    .append(e)
+                    .toString());
+            notifyError(TvInputManager.RECORDING_ERROR_UNKNOWN);
+        }
     }
 
     public void onTune(Uri uri) {

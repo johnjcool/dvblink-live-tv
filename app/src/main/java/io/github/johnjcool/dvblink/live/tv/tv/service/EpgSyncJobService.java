@@ -63,7 +63,7 @@ public class EpgSyncJobService extends com.google.android.media.tv.companionlibr
 
                             Channel.Builder builder = new Channel.Builder()
                                     .setDisplayName(channel.getName())
-                                    .setDisplayNumber(String.valueOf(channel.getNumber()))
+                                    .setDisplayNumber("3-" + String.valueOf(channel.getNumber()))
                                     .setOriginalNetworkId(originalNetworkId)
                                     .setServiceType(serviceType)
                                     .setChannelLogo(getChannelLogo(channel.getChannelLogo()))
