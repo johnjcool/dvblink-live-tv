@@ -63,13 +63,13 @@ public class EpgSyncJobService extends com.google.android.media.tv.companionlibr
 
                             Channel.Builder builder = new Channel.Builder()
                                     .setDisplayName(channel.getName())
-                                    .setDisplayNumber("3-" + String.valueOf(channel.getNumber()))
+                                    .setDisplayNumber(String.valueOf(channel.getNumber()))
                                     .setOriginalNetworkId(originalNetworkId)
                                     .setServiceType(serviceType)
                                     .setChannelLogo(getChannelLogo(channel.getChannelLogo()))
                                     .setInternalProviderData(internalProviderData)
-                                    .setTransportStreamId(0)
-                                    .setServiceId(0);
+                                    .setServiceId(0)
+                                    .setSearchable(true);
 
                             return builder.build();
                         }
@@ -86,7 +86,7 @@ public class EpgSyncJobService extends com.google.android.media.tv.companionlibr
                                                long endMs) {
         try {
             List<io.github.johnjcool.dvblink.live.tv.remote.model.response.Program> programs = client
-                    .getPrograms(String.valueOf(channel.getOriginalNetworkId()), startMs/1000, endMs/1000);
+                    .getPrograms(String.valueOf(channel.getOriginalNetworkId()), startMs / 1000, endMs / 1000);
 
             if (programs.isEmpty()) {
                 return new ArrayList<>();
@@ -102,9 +102,9 @@ public class EpgSyncJobService extends com.google.android.media.tv.companionlibr
                                     .setPosterArtUri(program.getImage())
                                     .setCanonicalGenres(program.getCategories() != null ?
                                             program.getCategories().split(",") :
-                                            new String [] {""})
-                                    .setStartTimeUtcMillis(program.getStartTime()*1000)
-                                    .setEndTimeUtcMillis((program.getStartTime() + program.getDuration())*1000)
+                                            new String[]{""})
+                                    .setStartTimeUtcMillis(program.getStartTime() * 1000)
+                                    .setEndTimeUtcMillis((program.getStartTime() + program.getDuration()) * 1000)
                                     .setAudioLanguages(program.getLanguage())
                                     //.setContentRatings(rating.toArray(new TvContentRating[rating.size()]))
                                     // NOTE: {@code COLUMN_INTERNAL_PROVIDER_DATA} is a private field
@@ -135,7 +135,7 @@ public class EpgSyncJobService extends com.google.android.media.tv.companionlibr
         try {
             List<StreamInfo.Channel> channels = client.getStreamInfo(dvbLinkId).getChannels();
             if (!channels.isEmpty() && channels.size() == 1) {
-                return channels.get(0).getUrl().replace(":8101","");
+                return channels.get(0).getUrl().replace(":8101", "");
             }
             throw new Exception("wrong channel size (" + channels.size() + ")");
         } catch (Exception e) {
@@ -144,6 +144,7 @@ public class EpgSyncJobService extends com.google.android.media.tv.companionlibr
         return null;
     }
 
+    // TODO: get host of config
     private String getChannelLogo(String channelLogoSrc) {
         if (channelLogoSrc != null && channelLogoSrc.contains("localhost")) {
             channelLogoSrc = channelLogoSrc.replace("localhost", sharedPreferences.getString(Constants.KEY_HOSTNAME, "192.168.178.26"));
