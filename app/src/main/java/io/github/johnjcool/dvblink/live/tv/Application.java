@@ -2,12 +2,11 @@ package io.github.johnjcool.dvblink.live.tv;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.support.multidex.MultiDexApplication;
 
 import io.github.johnjcool.dvblink.live.tv.remote.DvbLinkClient;
 import io.github.johnjcool.dvblink.live.tv.tv.TvUtils;
 
-public class Application extends MultiDexApplication {
+public class Application extends android.app.Application {
 
     private static DvbLinkClient mDvbLinkClient;
 
