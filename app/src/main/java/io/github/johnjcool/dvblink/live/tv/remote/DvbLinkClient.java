@@ -2,8 +2,6 @@ package io.github.johnjcool.dvblink.live.tv.remote;
 
 import android.util.Log;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator;
 
@@ -13,6 +11,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import javax.inject.Singleton;
 
 import io.github.johnjcool.dvblink.live.tv.remote.model.request.ItemType;
 import io.github.johnjcool.dvblink.live.tv.remote.model.request.ObjectRequester;
@@ -33,12 +33,8 @@ import okhttp3.Credentials;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import retrofit2.Call;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
-import retrofit2.http.Field;
-import retrofit2.http.FormUrlEncoded;
-import retrofit2.http.POST;
 
+@Singleton
 public class DvbLinkClient {
 
     private static final String TAG = DvbLinkClient.class.getName();
@@ -47,57 +43,49 @@ public class DvbLinkClient {
     private static final String CONTAINER_WITH_RECORDINGS_SORTED_BY_NAME_ID = "E44367A7-6293-4492-8C07-0E551195B99F";
 
     private static final String CLIENT_ID = "80ba7c06-a9e9-4e0c-a9ab-0ee329e5537d";
-    private static final String URL_TMPL = "http://%s:%d/";
 
-    // DAGGER
-    private final XmlMapper mapper;
-    private DvbLinkApi dvbLinkApi;
-    private String host;
+    private DvbLinkApi mDvbLinkApi;
+    private XmlMapper mMapper;
+    private String mHost;
 
-    public DvbLinkClient(String host, int port, String username, String password) {
-        this.host = host;
-        mapper = new XmlMapper();
-        mapper.enable(SerializationFeature.WRITE_ENUMS_USING_TO_STRING);
-        mapper.enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING);
-        dvbLinkApi = new Retrofit.Builder()
-                .baseUrl(String.format(URL_TMPL, host, port))
-                .client(initializeOkHttpClient(username, password))
-                .addConverterFactory(JacksonConverterFactory.create(mapper))
-                .build().create(DvbLinkApi.class);
+    public DvbLinkClient(DvbLinkApi dvbLinkApi, XmlMapper mapper, String host) {
+        mDvbLinkApi = dvbLinkApi;
+        mMapper = mapper;
+        mHost = host;
     }
 
     public ServerInfo getServerInfo() throws Exception {
-        Call<Response> call = dvbLinkApi.post("get_server_info");
+        Call<Response> call = mDvbLinkApi.post("get_server_info");
         retrofit2.Response<Response> response = call.execute();
         if (response.isSuccessful()) {
             Response resp = response.body();
-            return mapper.readValue(resp.getXmlResult(), ServerInfo.class);
+            return mMapper.readValue(resp.getXmlResult(), ServerInfo.class);
         } else {
             throw new Exception(response.errorBody().string());
         }
     }
 
     public List<Channel> getChannels() throws Exception {
-        Call<Response> call = dvbLinkApi.post("get_channels");
+        Call<Response> call = mDvbLinkApi.post("get_channels");
         retrofit2.Response<Response> response = call.execute();
         if (response.isSuccessful()) {
             Response resp = response.body();
-            return mapper.readValue(resp.getXmlResult(), Channel.Channels.class).getChannels();
+            return mMapper.readValue(resp.getXmlResult(), Channel.Channels.class).getChannels();
         } else {
             throw new Exception(response.errorBody().string());
         }
     }
 
     public io.github.johnjcool.dvblink.live.tv.remote.model.response.StreamInfo getStreamInfo(Long dvbLinkId) throws Exception {
-        String xmlData = mapper.writer()
+        String xmlData = mMapper.writer()
                 .with(ToXmlGenerator.Feature.WRITE_XML_DECLARATION)
-                .writeValueAsString(new StreamInfo(host, CLIENT_ID, Arrays.asList(dvbLinkId)));
-        Call<Response> call = dvbLinkApi.post("get_stream_info", xmlData);
+                .writeValueAsString(new StreamInfo(mHost, CLIENT_ID, Arrays.asList(dvbLinkId)));
+        Call<Response> call = mDvbLinkApi.post("get_stream_info", xmlData);
         retrofit2.Response<Response> response = call.execute();
         if (response.isSuccessful()) {
             Response resp = response.body();
             if (resp.getStatusCode() == StatusCode.STATUS_OK) {
-                return mapper.readValue(resp.getXmlResult(), io.github.johnjcool.dvblink.live.tv.remote.model.response.StreamInfo.class);
+                return mMapper.readValue(resp.getXmlResult(), io.github.johnjcool.dvblink.live.tv.remote.model.response.StreamInfo.class);
             } else {
                 throw new Exception(resp.getStatusCode() + ": " + resp.getStatusCode().name());
             }
@@ -107,17 +95,17 @@ public class DvbLinkClient {
     }
 
     public List<Program> getPrograms(String channelId, long startTime, long endTime) throws Exception {
-        String xmlData = mapper.writer()
+        String xmlData = mMapper.writer()
                 .with(ToXmlGenerator.Feature.WRITE_XML_DECLARATION)
                 .writeValueAsString(new SearchEpg(Arrays.asList(channelId), startTime, endTime));
-        Call<Response> call = dvbLinkApi.post("search_epg", xmlData);
+        Call<Response> call = mDvbLinkApi.post("search_epg", xmlData);
         retrofit2.Response<Response> response = call.execute();
         if (response.isSuccessful()) {
             Response resp = response.body();
             try {
-                Program.EpgSearcher epgSearcher = mapper.readValue(resp.getXmlResult(), Program.EpgSearcher.class);
+                Program.EpgSearcher epgSearcher = mMapper.readValue(resp.getXmlResult(), Program.EpgSearcher.class);
                 if (epgSearcher.getChannelEpgs() != null) {
-                    return mapper.readValue(resp.getXmlResult(), Program.EpgSearcher.class)
+                    return mMapper.readValue(resp.getXmlResult(), Program.EpgSearcher.class)
                             .getChannelEpgs().get(0).getPrograms();
                 }
             } catch (Exception e) {
@@ -130,10 +118,10 @@ public class DvbLinkClient {
     }
 
     public Recording addSchedule(Schedule schedule) throws Exception {
-        String xmlData = mapper.writer()
+        String xmlData = mMapper.writer()
                 .with(ToXmlGenerator.Feature.WRITE_XML_DECLARATION)
                 .writeValueAsString(schedule);
-        Call<Response> call = dvbLinkApi.post("add_schedule", xmlData);
+        Call<Response> call = mDvbLinkApi.post("add_schedule", xmlData);
         retrofit2.Response<Response> response = call.execute();
         if (!response.isSuccessful()) {
             throw new Exception(response.errorBody().string());
@@ -154,21 +142,21 @@ public class DvbLinkClient {
     }
 
     public List<Recording> getRecordings() throws Exception {
-        Call<Response> call = dvbLinkApi.post("get_recordings");
+        Call<Response> call = mDvbLinkApi.post("get_recordings");
         retrofit2.Response<Response> response = call.execute();
         if (response.isSuccessful()) {
             Response resp = response.body();
-            return mapper.readValue(resp.getXmlResult(), Recording.Recordings.class).getRecordings();
+            return mMapper.readValue(resp.getXmlResult(), Recording.Recordings.class).getRecordings();
         } else {
             throw new Exception(response.errorBody().string());
         }
     }
 
     public void removeRecording(String recordingId) throws Exception {
-        String xmlParam = mapper.writer()
+        String xmlParam = mMapper.writer()
                 .with(ToXmlGenerator.Feature.WRITE_XML_DECLARATION)
                 .writeValueAsString(new RemoveRecording(recordingId));
-        Call<Response> call = dvbLinkApi.post("remove_recording", xmlParam);
+        Call<Response> call = mDvbLinkApi.post("remove_recording", xmlParam);
 
         retrofit2.Response<Response> response = call.execute();
         if (!response.isSuccessful()) {
@@ -187,12 +175,12 @@ public class DvbLinkClient {
     }
 
     public List<RecordedTV> getRecordedPrograms() throws Exception {
-        Object rootObject = getObject(new ObjectRequester(CONTAINER_ROOT_ID, host, ObjectType.OBJECT_CONTAINER, ItemType.ITEM_UNKNOWN));
+        Object rootObject = getObject(new ObjectRequester(CONTAINER_ROOT_ID, mHost, ObjectType.OBJECT_CONTAINER, ItemType.ITEM_UNKNOWN));
         if (rootObject.getContainers() == null || rootObject.getContainers().isEmpty()) {
             return Collections.emptyList();
         }
         String recordedProgramsId = String.format("%s%s", rootObject.getContainers().get(0).getObjectId(), CONTAINER_WITH_RECORDINGS_SORTED_BY_NAME_ID);
-        Object recordedProgramsObject = getObject(new ObjectRequester(recordedProgramsId, host, ObjectType.OBJECT_ITEM, ItemType.ITEM_RECORDED_TV));
+        Object recordedProgramsObject = getObject(new ObjectRequester(recordedProgramsId, mHost, ObjectType.OBJECT_ITEM, ItemType.ITEM_RECORDED_TV));
 
         if (rootObject.getRecordedTVs() == null) {
             return Collections.emptyList();
@@ -202,14 +190,14 @@ public class DvbLinkClient {
 
 
     public Object getObject(ObjectRequester objectRequester) throws Exception {
-        String xmlData = mapper.writer()
+        String xmlData = mMapper.writer()
                 .with(ToXmlGenerator.Feature.WRITE_XML_DECLARATION)
                 .writeValueAsString(objectRequester);
-        Call<Response> call = dvbLinkApi.post("get_object", xmlData);
+        Call<Response> call = mDvbLinkApi.post("get_object", xmlData);
         retrofit2.Response<Response> response = call.execute();
         if (response.isSuccessful()) {
             Response resp = response.body();
-            return mapper.readValue(resp.getXmlResult(), Object.class);
+            return mMapper.readValue(resp.getXmlResult(), Object.class);
         } else {
             throw new Exception(response.errorBody().string());
         }
@@ -228,17 +216,5 @@ public class DvbLinkClient {
                 return chain.proceed(newRequest);
             }
         }).readTimeout(60, TimeUnit.SECONDS).build();
-    }
-
-
-    private interface DvbLinkApi {
-
-        @FormUrlEncoded
-        @POST("cs/")
-        Call<Response> post(@Field("command") String command, @Field("xml_param") String xmlParam);
-
-        @FormUrlEncoded
-        @POST("cs/")
-        Call<Response> post(@Field("command") String command);
     }
 }

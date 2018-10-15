@@ -7,7 +7,12 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Handler;
 
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+
 import io.github.johnjcool.dvblink.live.tv.Constants;
+import io.github.johnjcool.dvblink.live.tv.di.ServiceModule;
+import io.github.johnjcool.dvblink.live.tv.remote.DvbLinkApi;
+import io.github.johnjcool.dvblink.live.tv.remote.DvbLinkClient;
 
 public class AccountUtils {
     // TODO: Suppressing warnings is bad... But, the Android linter is broken. getAccountsByType
@@ -38,5 +43,20 @@ public class AccountUtils {
     public static void addOnAccountsUpdatedListener(Context context, final OnAccountsUpdateListener listener, Handler handler, boolean updateImmediately) {
         AccountManager accountManager = AccountManager.get(context);
         accountManager.addOnAccountsUpdatedListener(listener, handler, updateImmediately);
+    }
+
+    public static DvbLinkClient getDvbLinkClient(String host, int port, String username, String password) {
+        ServiceModule module = new ServiceModule();
+        XmlMapper mapper = module.provideXmlMapper();
+
+        DvbLinkApi api = module.provideDvbLinkApi(
+                module.provideRetrofit(
+                        host,
+                        port,
+                        mapper,
+                        module.provideOkHttpClient(username, password)
+                )
+        );
+        return new DvbLinkClient(api, mapper, host);
     }
 }

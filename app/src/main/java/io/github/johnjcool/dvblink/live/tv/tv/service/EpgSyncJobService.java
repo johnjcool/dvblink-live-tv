@@ -1,7 +1,5 @@
 package io.github.johnjcool.dvblink.live.tv.tv.service;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.media.tv.TvContract;
 import android.net.Uri;
 import android.util.Log;
@@ -16,7 +14,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import io.github.johnjcool.dvblink.live.tv.Constants;
+import io.github.johnjcool.dvblink.live.tv.di.Injector;
 import io.github.johnjcool.dvblink.live.tv.remote.DvbLinkClient;
 import io.github.johnjcool.dvblink.live.tv.remote.model.response.StreamInfo;
 
@@ -24,25 +22,18 @@ public class EpgSyncJobService extends com.google.android.media.tv.companionlibr
 
     private static final String TAG = EpgSyncJobService.class.getName();
 
-    private DvbLinkClient client;
-    private SharedPreferences sharedPreferences;
+    private DvbLinkClient mDvbLinkClient;
+    private String mHost;
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        sharedPreferences = getSharedPreferences(
-                com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService.PREFERENCE_EPG_SYNC, Context.MODE_PRIVATE);
-        client = new DvbLinkClient(
-                sharedPreferences.getString(Constants.KEY_HOSTNAME, "192.168.178.26"),
-                Integer.parseInt(sharedPreferences.getString(Constants.KEY_PORT, "80")),
-                sharedPreferences.getString(Constants.KEY_USERNAME, "user"),
-                sharedPreferences.getString(Constants.KEY_PASSWORD, "admin"));
+    public EpgSyncJobService() {
+        mDvbLinkClient = Injector.get().dvbLinkClient();
+        mHost = Injector.get().host();
     }
 
     @Override
     public List<Channel> getChannels() {
         try {
-            List<io.github.johnjcool.dvblink.live.tv.remote.model.response.Channel> channels = client.getChannels();
+            List<io.github.johnjcool.dvblink.live.tv.remote.model.response.Channel> channels = mDvbLinkClient.getChannels();
             Function<io.github.johnjcool.dvblink.live.tv.remote.model.response.Channel, Channel> channelTransform =
                     new Function<io.github.johnjcool.dvblink.live.tv.remote.model.response.Channel, Channel>() {
                         public Channel apply(io.github.johnjcool.dvblink.live.tv.remote.model.response.Channel channel) {
@@ -85,7 +76,7 @@ public class EpgSyncJobService extends com.google.android.media.tv.companionlibr
     public List<Program> getProgramsForChannel(Uri channelUri, final Channel channel, long startMs,
                                                long endMs) {
         try {
-            List<io.github.johnjcool.dvblink.live.tv.remote.model.response.Program> programs = client
+            List<io.github.johnjcool.dvblink.live.tv.remote.model.response.Program> programs = mDvbLinkClient
                     .getPrograms(String.valueOf(channel.getOriginalNetworkId()), startMs / 1000, endMs / 1000);
 
             if (programs.isEmpty()) {
@@ -133,7 +124,7 @@ public class EpgSyncJobService extends com.google.android.media.tv.companionlibr
 
     private String getProgramVideoSrc(Long dvbLinkId) {
         try {
-            List<StreamInfo.Channel> channels = client.getStreamInfo(dvbLinkId).getChannels();
+            List<StreamInfo.Channel> channels = mDvbLinkClient.getStreamInfo(dvbLinkId).getChannels();
             if (!channels.isEmpty() && channels.size() == 1) {
                 return channels.get(0).getUrl().replace(":8101", "");
             }
@@ -147,7 +138,7 @@ public class EpgSyncJobService extends com.google.android.media.tv.companionlibr
     // TODO: get host of config
     private String getChannelLogo(String channelLogoSrc) {
         if (channelLogoSrc != null && channelLogoSrc.contains("localhost")) {
-            channelLogoSrc = channelLogoSrc.replace("localhost", sharedPreferences.getString(Constants.KEY_HOSTNAME, "192.168.178.26"));
+            channelLogoSrc = channelLogoSrc.replace("localhost", mHost);
         }
         return channelLogoSrc;
     }

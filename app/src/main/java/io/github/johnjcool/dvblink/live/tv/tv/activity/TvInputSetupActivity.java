@@ -25,9 +25,11 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.github.johnjcool.dvblink.live.tv.Application;
 import io.github.johnjcool.dvblink.live.tv.Constants;
 import io.github.johnjcool.dvblink.live.tv.R;
 import io.github.johnjcool.dvblink.live.tv.account.AccountUtils;
+import io.github.johnjcool.dvblink.live.tv.di.Injector;
 import io.github.johnjcool.dvblink.live.tv.settings.SettingsActivity;
 import io.github.johnjcool.dvblink.live.tv.tv.TvUtils;
 import io.github.johnjcool.dvblink.live.tv.tv.service.EpgSyncJobService;
@@ -381,6 +383,11 @@ public class TvInputSetupActivity extends Activity {
             editor.putString(Constants.KEY_PASSWORD, mAccountManager.getPassword(account));
             editor.apply();
 
+            SharedPreferences test = Injector.get().sharedPreferences();
+
+            Log.i(TAG, test.getString(Constants.KEY_HOSTNAME,"haha"));
+
+            ((Application) getActivity().getApplication()).resetComponents();
             EpgSyncJobService.requestImmediateSync(getActivity(), mInputId,
                     new ComponentName(getActivity(), EpgSyncJobService.class));
 
