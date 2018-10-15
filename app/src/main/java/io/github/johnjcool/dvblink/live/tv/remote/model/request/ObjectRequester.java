@@ -26,7 +26,7 @@ import java.io.Serializable;
 @JsonRootName(value = "object_requester", namespace = "http://www.dvblogic.com")
 public class ObjectRequester implements Serializable {
 
-    @JsonProperty("objectId")
+    @JsonProperty("object_id")
     private String objectId;
     @JsonProperty("object_type")
     private ObjectType objectType;

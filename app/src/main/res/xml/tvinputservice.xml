@@ -15,4 +15,5 @@
 -->
 <tv-input xmlns:android="http://schemas.android.com/apk/res/android"
     android:canRecord="true"
-    android:setupActivity="io.github.johnjcool.dvblink.live.tv.tv.activity.TvInputSetupActivity" />
+    android:setupActivity="io.github.johnjcool.dvblink.live.tv.tv.activity.TvInputSetupActivity"
+    android:tunerCount="2"/>

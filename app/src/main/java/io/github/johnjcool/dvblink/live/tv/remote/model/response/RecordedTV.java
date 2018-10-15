@@ -40,6 +40,8 @@ public class RecordedTV {
     private long size;
     @JsonProperty("creation_time")
     private long creationTime;
+    @JsonProperty("channel_id")
+    private String channelId;
     @JsonProperty("channel_name")
     private String channelName;
     @JsonProperty("channel_number")
@@ -177,6 +179,14 @@ public class RecordedTV {
         this.videoInfo = videoInfo;
     }
 
+    public String getChannelId() {
+        return channelId;
+    }
+
+    public void setChannelId(String channelId) {
+        this.channelId = channelId;
+    }
+
     @Override
     public String toString() {
         return "RecordedTV{" +
@@ -187,6 +197,7 @@ public class RecordedTV {
                 ", canBeDeleted=" + canBeDeleted +
                 ", size=" + size +
                 ", creationTime=" + creationTime +
+                ", channelId='" + channelId + '\'' +
                 ", channelName='" + channelName + '\'' +
                 ", channelNumber=" + channelNumber +
                 ", channelSubnumber=" + channelSubnumber +

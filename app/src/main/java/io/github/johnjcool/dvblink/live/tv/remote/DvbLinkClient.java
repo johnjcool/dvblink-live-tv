@@ -12,8 +12,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Singleton;
-
 import io.github.johnjcool.dvblink.live.tv.remote.model.request.ItemType;
 import io.github.johnjcool.dvblink.live.tv.remote.model.request.ObjectRequester;
 import io.github.johnjcool.dvblink.live.tv.remote.model.request.ObjectType;
@@ -122,10 +120,11 @@ public class DvbLinkClient {
                 .writeValueAsString(schedule);
         Call<Response> call = mDvbLinkApi.post("add_schedule", xmlData);
         retrofit2.Response<Response> response = call.execute();
-        if (!response.isSuccessful()) {
+        if (!response.isSuccessful() || response.body().getStatusCode() != StatusCode.STATUS_OK) {
             throw new Exception(response.errorBody().string());
         }
 
+        Thread.sleep(1500);
         List<Recording> recordings = getRecordings();
         for (Recording recording : recordings) {
             if (recording.isActive()) {
@@ -181,7 +180,7 @@ public class DvbLinkClient {
         String recordedProgramsId = String.format("%s%s", rootObject.getContainers().get(0).getObjectId(), CONTAINER_WITH_RECORDINGS_SORTED_BY_NAME_ID);
         Object recordedProgramsObject = getObject(new ObjectRequester(recordedProgramsId, mHost, ObjectType.OBJECT_ITEM, ItemType.ITEM_RECORDED_TV));
 
-        if (rootObject.getRecordedTVs() == null) {
+        if (recordedProgramsObject.getRecordedTVs() == null) {
             return Collections.emptyList();
         }
         return recordedProgramsObject.getRecordedTVs();
