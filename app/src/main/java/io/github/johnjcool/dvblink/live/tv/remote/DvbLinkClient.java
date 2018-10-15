@@ -34,7 +34,6 @@ import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import retrofit2.Call;
 
-@Singleton
 public class DvbLinkClient {
 
     private static final String TAG = DvbLinkClient.class.getName();

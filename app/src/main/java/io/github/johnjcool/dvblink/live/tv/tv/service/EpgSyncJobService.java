@@ -87,12 +87,16 @@ public class EpgSyncJobService extends com.google.android.media.tv.companionlibr
             Function<io.github.johnjcool.dvblink.live.tv.remote.model.response.Program, Program> programTransform =
                     new Function<io.github.johnjcool.dvblink.live.tv.remote.model.response.Program, Program>() {
                         public Program apply(io.github.johnjcool.dvblink.live.tv.remote.model.response.Program program) {
+                            InternalProviderData data = null;
                             try {
-                                channel.getInternalProviderData().put(Constants.KEY_ORGINAL_PROGRAM_ID, program.getId());
+                                data = new InternalProviderData(channel.getInternalProviderDataByteArray());
+                                data.put(Constants.KEY_ORGINAL_PROGRAM_ID, program.getId());
                             } catch (InternalProviderData.ParseException e) {
-                                Log.e(TAG,"Error parsing orginal program id." ,e);
+                                Log.e(TAG, "Error parsing orginal program id.", e);
                             }
-                            return new Program.Builder(channel)
+                            return new Program.Builder()
+                                    .setChannelId(channel.getId())
+                                    .setThumbnailUri(channel.getChannelLogo())
                                     .setDescription(program.getShortDesc())
                                     .setTitle(program.getName())
                                     .setPosterArtUri(program.getImage())
@@ -107,6 +111,7 @@ public class EpgSyncJobService extends com.google.android.media.tv.companionlibr
                                     // where TvInputService can store anything it wants. Here, we store
                                     // video type and video URL so that TvInputService can play the
                                     // video later with this field.
+                                    .setInternalProviderData(data)
                                     .build();
                         }
                     };

@@ -101,26 +101,30 @@ class RecordingSession extends BaseTvInputService.RecordingSession {
     }
 
     private void startProgramRecording(Program program) {
-        try {
-            Log.d(TAG, (new StringBuilder())
-                    .append("startProgramRecording: ")
-                    .append(mChannel.getOriginalNetworkId())
-                    .append(", program title: ")
-                    .append(program.getTitle()).toString());
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Log.d(TAG, (new StringBuilder())
+                            .append("startProgramRecording: ")
+                            .append(mChannel.getOriginalNetworkId())
+                            .append(", program title: ")
+                            .append(program.getTitle()).toString());
 
-            Schedule schedule = new Schedule(
-                    new Schedule.ByEpg(
-                            String.valueOf(mChannel.getOriginalNetworkId()),
-                            String.valueOf(program.getInternalProviderData().get(Constants.KEY_ORGINAL_PROGRAM_ID))
-                    )
-            );
-
-            mRecording = mDvbLinkClient.addSchedule(schedule);
-            Log.d(TAG, "Recording for channel " + mChannel.getDisplayName() + " and programm " + program.getTitle() + " successfully scheduled.");
-        } catch (Exception e) {
-            Log.e(TAG, "Exception schedule recording for channel " + mChannel.getDisplayName() + " and programm " + program.getTitle() + ".\n" + e.fillInStackTrace());
-            notifyError(TvInputManager.RECORDING_ERROR_UNKNOWN);
-        }
+                    Schedule schedule = new Schedule(
+                            new Schedule.ByEpg(
+                                    String.valueOf(mChannel.getOriginalNetworkId()),
+                                    String.valueOf(program.getInternalProviderData().get(Constants.KEY_ORGINAL_PROGRAM_ID))
+                            )
+                    );
+                    mRecording = mDvbLinkClient.addSchedule(schedule);
+                    Log.d(TAG, "Recording for channel " + mChannel.getDisplayName() + " and programm " + program.getTitle() + " successfully scheduled.");
+                } catch (Exception e) {
+                    Log.e(TAG, "Exception schedule recording for channel " + mChannel.getDisplayName() + " and programm " + program.getTitle() + ".\n" + e.fillInStackTrace());
+                    notifyError(TvInputManager.RECORDING_ERROR_UNKNOWN);
+                }
+            }
+        }).start();
     }
 
     public void notifyRecordingStopped(RecordedProgram recordedprogram) {
