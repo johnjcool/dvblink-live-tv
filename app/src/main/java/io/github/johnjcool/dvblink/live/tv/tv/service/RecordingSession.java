@@ -16,6 +16,7 @@ import com.google.android.media.tv.companionlibrary.model.RecordedProgram;
 
 import java.util.concurrent.TimeUnit;
 
+import io.github.johnjcool.dvblink.live.tv.Constants;
 import io.github.johnjcool.dvblink.live.tv.di.Injector;
 import io.github.johnjcool.dvblink.live.tv.remote.DvbLinkClient;
 import io.github.johnjcool.dvblink.live.tv.remote.model.request.Schedule;
@@ -101,8 +102,19 @@ class RecordingSession extends BaseTvInputService.RecordingSession {
 
     private void startProgramRecording(Program program) {
         try {
-            Log.d(TAG, (new StringBuilder()).append("startProgramRecording: ").append(program.getChannelId()).append(", program title: ").append(program.getTitle()).toString());
-            Schedule schedule = new Schedule(new Schedule.ByEpg(String.valueOf(program.getChannelId()), String.valueOf(program.getId())));
+            Log.d(TAG, (new StringBuilder())
+                    .append("startProgramRecording: ")
+                    .append(mChannel.getOriginalNetworkId())
+                    .append(", program title: ")
+                    .append(program.getTitle()).toString());
+
+            Schedule schedule = new Schedule(
+                    new Schedule.ByEpg(
+                            String.valueOf(mChannel.getOriginalNetworkId()),
+                            String.valueOf(program.getInternalProviderData().get(Constants.KEY_ORGINAL_PROGRAM_ID))
+                    )
+            );
+
             mRecording = mDvbLinkClient.addSchedule(schedule);
             Log.d(TAG, "Recording for channel " + mChannel.getDisplayName() + " and programm " + program.getTitle() + " successfully scheduled.");
         } catch (Exception e) {
