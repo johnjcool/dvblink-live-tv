@@ -46,59 +46,71 @@ class RecordingSession extends BaseTvInputService.RecordingSession {
         mHost = Injector.get().host();
     }
 
-    @WorkerThread
-    public void onStartRecording(Uri programUri) {
+    public void onStartRecording(final Uri programUri) {
         super.onStartRecording(programUri);
-        Log.d(TAG, (new StringBuilder()).append("onStartRecording: ").append(programUri).toString());
-        ContentResolver resolver = mContext.getContentResolver();
-        mChannel = ModelUtils.getChannel(resolver, mChannelUri);
-        if (programUri != null) {
-            Program program = TvUtils.getRecordingProgram(resolver, mChannelUri, programUri);
-            if (program == null) {
-                notifyError(TvInputManager.RECORDING_ERROR_UNKNOWN);
-            } else {
-                startProgramRecording(program);
+        new Thread() {
+            @Override
+            public void run() {
+                Log.d(TAG, (new StringBuilder()).append("onStartRecording: ").append(programUri).toString());
+                ContentResolver resolver = mContext.getContentResolver();
+                mChannel = ModelUtils.getChannel(resolver, mChannelUri);
+                if (programUri != null) {
+                    Program program = TvUtils.getRecordingProgram(resolver, mChannelUri, programUri);
+                    if (program == null) {
+                        notifyError(TvInputManager.RECORDING_ERROR_UNKNOWN);
+                    } else {
+                        startProgramRecording(program);
+                    }
+                } else {
+                    startChannelRecording();
+                }
             }
-        } else {
-            startChannelRecording();
-        }
+        }.start();
     }
 
-    @WorkerThread
     public void onStopRecording(final Program programToRecord) {
-        try {
-            Log.d(TAG, "onStopRecording");
-            mDvbLinkClient.removeRecording(mRecording.getRecordingId());
-            createRecordedProgram(programToRecord);
-        } catch (Exception e) {
-            Log.e(RecordingSession.TAG, (new StringBuilder())
-                    .append("onStopRecording, program: ")
-                    .append(programToRecord.getTitle())
-                    .append(", channel: ")
-                    .append(mChannel.getDisplayName())
-                    .append("\n")
-                    .append(e)
-                    .toString());
-            notifyError(TvInputManager.RECORDING_ERROR_UNKNOWN);
-        }
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    Log.d(TAG, "onStopRecording");
+                    mDvbLinkClient.removeRecording(mRecording.getRecordingId());
+                    createRecordedProgram(programToRecord);
+                } catch (Exception e) {
+                    Log.e(RecordingSession.TAG, (new StringBuilder())
+                            .append("onStopRecording, program: ")
+                            .append(programToRecord.getTitle())
+                            .append(", channel: ")
+                            .append(mChannel.getDisplayName())
+                            .append("\n")
+                            .append(e)
+                            .toString());
+                    notifyError(TvInputManager.RECORDING_ERROR_UNKNOWN);
+                }
+            }
+        }.start();
     }
 
-    @WorkerThread
     public void onStopRecordingChannel(final Channel channelToRecord) {
-        Log.d(TAG, "onStopRecordingChannel");
-        try {
-            Log.d(TAG, "onStopRecording");
-            mDvbLinkClient.removeRecording(mRecording.getRecordingId());
-            createRecordedChannel(channelToRecord);
-        } catch (Exception e) {
-            Log.e(RecordingSession.TAG, (new StringBuilder())
-                    .append("onStopRecording, channel: ")
-                    .append(channelToRecord.getDisplayName())
-                    .append("\n")
-                    .append(e)
-                    .toString());
-            notifyError(TvInputManager.RECORDING_ERROR_UNKNOWN);
-        }
+        new Thread() {
+            @Override
+            public void run() {
+                Log.d(TAG, "onStopRecordingChannel");
+                try {
+                    Log.d(TAG, "onStopRecording");
+                    mDvbLinkClient.removeRecording(mRecording.getRecordingId());
+                    createRecordedChannel(channelToRecord);
+                } catch (Exception e) {
+                    Log.e(RecordingSession.TAG, (new StringBuilder())
+                            .append("onStopRecording, channel: ")
+                            .append(channelToRecord.getDisplayName())
+                            .append("\n")
+                            .append(e)
+                            .toString());
+                    notifyError(TvInputManager.RECORDING_ERROR_UNKNOWN);
+                }
+            }
+        }.start();
     }
 
     public void onTune(Uri uri) {
@@ -117,7 +129,7 @@ class RecordingSession extends BaseTvInputService.RecordingSession {
     }
 
     // private internal shelper methods
-    private void startProgramRecording(Program program) {
+    private void startProgramRecording(final Program program) {
         try {
             Log.d(TAG, (new StringBuilder())
                     .append("startProgramRecording: ")
@@ -137,6 +149,7 @@ class RecordingSession extends BaseTvInputService.RecordingSession {
             Log.e(TAG, "Exception schedule recording for channel " + mChannel.getDisplayName() + " and programm " + program.getTitle() + ".\n" + e.fillInStackTrace());
             notifyError(TvInputManager.RECORDING_ERROR_UNKNOWN);
         }
+
     }
 
     private void createRecordedProgram(final Program programToRecord) throws Exception {
@@ -153,6 +166,7 @@ class RecordingSession extends BaseTvInputService.RecordingSession {
 
         notifyRecordingStopped(recordedProgram);
     }
+
 
     private void startChannelRecording() {
         try {
