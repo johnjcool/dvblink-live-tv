@@ -385,8 +385,6 @@ public class TvInputSetupActivity extends Activity {
 
             SharedPreferences test = Injector.get().sharedPreferences();
 
-            Log.i(TAG, test.getString(Constants.KEY_HOSTNAME,"haha"));
-
             ((Application) getActivity().getApplication()).resetComponents();
             EpgSyncJobService.requestImmediateSync(getActivity(), mInputId,
                     new ComponentName(getActivity(), EpgSyncJobService.class));
@@ -478,7 +476,6 @@ public class TvInputSetupActivity extends Activity {
             } else if (action.getId() == ACTION_ID_COMPLETE) {
                 // Store the Setup Complete preference
                 TvUtils.setSetupComplete(getActivity(), true);
-
 
                 if (!mErrorFound) {
                     EpgSyncJobService.cancelAllSyncRequests(getActivity());

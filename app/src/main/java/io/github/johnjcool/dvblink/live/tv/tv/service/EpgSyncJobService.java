@@ -18,6 +18,7 @@ import io.github.johnjcool.dvblink.live.tv.Constants;
 import io.github.johnjcool.dvblink.live.tv.di.Injector;
 import io.github.johnjcool.dvblink.live.tv.remote.DvbLinkClient;
 import io.github.johnjcool.dvblink.live.tv.remote.model.response.StreamInfo;
+import io.github.johnjcool.dvblink.live.tv.tv.TvUtils;
 
 public class EpgSyncJobService extends com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService {
 
@@ -58,7 +59,7 @@ public class EpgSyncJobService extends com.google.android.media.tv.companionlibr
                                     .setDisplayNumber(String.valueOf(channel.getNumber()))
                                     .setOriginalNetworkId(originalNetworkId)
                                     .setServiceType(serviceType)
-                                    .setChannelLogo(getChannelLogo(channel.getChannelLogo()))
+                                    .setChannelLogo(TvUtils.transformLocalhostToHost(channel.getChannelLogo(), mHost))
                                     .setInternalProviderData(internalProviderData)
                                     .setServiceId(0)
                                     .setSearchable(true);
@@ -100,17 +101,10 @@ public class EpgSyncJobService extends com.google.android.media.tv.companionlibr
                                     .setDescription(program.getShortDesc())
                                     .setTitle(program.getName())
                                     .setPosterArtUri(program.getImage())
-                                    .setCanonicalGenres(program.getCategories() != null ?
-                                            program.getCategories().split(",") :
-                                            new String[]{""})
+                                    .setCanonicalGenres(TvUtils.transformToGenres(program))
                                     .setStartTimeUtcMillis(program.getStartTime() * 1000)
                                     .setEndTimeUtcMillis((program.getStartTime() + program.getDuration()) * 1000)
                                     .setAudioLanguages(program.getLanguage())
-                                    //.setContentRatings(rating.toArray(new TvContentRating[rating.size()]))
-                                    // NOTE: {@code COLUMN_INTERNAL_PROVIDER_DATA} is a private field
-                                    // where TvInputService can store anything it wants. Here, we store
-                                    // video type and video URL so that TvInputService can play the
-                                    // video later with this field.
                                     .setInternalProviderData(data)
                                     .build();
                         }
@@ -142,13 +136,5 @@ public class EpgSyncJobService extends com.google.android.media.tv.companionlibr
             Log.e(TAG, "Failed to get program video source", e);
         }
         return null;
-    }
-
-    // TODO: get host of config
-    private String getChannelLogo(String channelLogoSrc) {
-        if (channelLogoSrc != null && channelLogoSrc.contains("localhost")) {
-            channelLogoSrc = channelLogoSrc.replace("localhost", mHost);
-        }
-        return channelLogoSrc;
     }
 }

@@ -12,6 +12,7 @@ import android.util.Log;
 import com.google.android.media.tv.companionlibrary.model.ModelUtils;
 import com.google.android.media.tv.companionlibrary.model.Program;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -88,5 +89,71 @@ public class TvUtils {
             }
         }
         return null;
+    }
+
+    public static String[] transformToGenres(io.github.johnjcool.dvblink.live.tv.remote.model.response.Program program) {
+        List<String> genres = new ArrayList<>();
+        if (program.isCatAction()) {
+            genres.add(TvContract.Programs.Genres.MOVIES);
+        }
+        if (program.isCatComedy()) {
+            genres.add(TvContract.Programs.Genres.COMEDY);
+        }
+        if (program.isCatDocumentary()) {
+            genres.add(TvContract.Programs.Genres.ANIMAL_WILDLIFE);
+        }
+        if (program.isCatDrama()) {
+            genres.add(TvContract.Programs.Genres.DRAMA);
+        }
+        if (program.isCatEducational()) {
+            genres.add(TvContract.Programs.Genres.EDUCATION);
+        }
+        if (program.isCatHorror()) {
+            genres.add(TvContract.Programs.Genres.MOVIES);
+        }
+        if (program.isCatKids()) {
+            genres.add(TvContract.Programs.Genres.FAMILY_KIDS);
+        }
+        if (program.isCatMovie()) {
+            genres.add(TvContract.Programs.Genres.MOVIES);
+        }
+        if (program.isCatMusic()) {
+            genres.add(TvContract.Programs.Genres.MUSIC);
+        }
+        if (program.isCatNews()) {
+            genres.add(TvContract.Programs.Genres.NEWS);
+        }
+        if (program.isCatReality()) {
+            genres.add(TvContract.Programs.Genres.LIFE_STYLE);
+        }
+        if (program.isCatRomance()) {
+            genres.add(TvContract.Programs.Genres.MOVIES);
+        }
+        if (program.isCatScifi()) {
+            genres.add(TvContract.Programs.Genres.MOVIES);
+        }
+        if (program.isCatSerial()) {
+            genres.add(TvContract.Programs.Genres.ENTERTAINMENT);
+        }
+        if (program.isCatSoap()) {
+            genres.add(TvContract.Programs.Genres.ENTERTAINMENT);
+        }
+        if (program.isCatSpecial()) {
+            genres.add(TvContract.Programs.Genres.PREMIER);
+        }
+        if (program.isCatThriller()) {
+            genres.add(TvContract.Programs.Genres.MOVIES);
+        }
+        if (program.isCatAdult()) {
+            genres.add(TvContract.Programs.Genres.MOVIES);
+        }
+        return genres.stream().toArray(String[]::new);
+    }
+
+    public static String transformLocalhostToHost(String source, String host) {
+        if (source != null && source.contains("localhost")) {
+            source = source.replace("localhost", host);
+        }
+        return source;
     }
 }
