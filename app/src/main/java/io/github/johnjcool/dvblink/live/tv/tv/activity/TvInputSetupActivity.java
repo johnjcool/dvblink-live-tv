@@ -306,28 +306,12 @@ public class TvInputSetupActivity extends Activity {
                                                 0);
 
                                 Log.d(TAG, "Error occurred: " + errorCode);
-
-                                onScanError(errorCode);
                             }
                         }
                     }
                 });
             }
         };
-
-        public void onScanError(int reason) {
-            mErrorFound = true;
-            switch (reason) {
-                case EpgSyncJobService.ERROR_EPG_SYNC_CANCELED:
-
-                    break;
-                case EpgSyncJobService.ERROR_NO_PROGRAMS:
-                case EpgSyncJobService.ERROR_NO_CHANNELS:
-                    break;
-                default:
-                    break;
-            }
-        }
 
         private void finishScan(boolean scanCompleted) {
             // Hides the cancel button.
@@ -344,7 +328,7 @@ public class TvInputSetupActivity extends Activity {
          * This method will be called when a channel has been completely scanned. It can be overriden
          * to display custom information about this channel to the user.
          *
-         * @param displayName {@link com.google.android.media.tv.companionlibrary.model.Channel#getDisplayName()} for the scanned channel.
+         * @param displayName   {@link com.google.android.media.tv.companionlibrary.model.Channel#getDisplayName()} for the scanned channel.
          * @param displayNumber {@link com.google.android.media.tv.companionlibrary.model.Channel#getDisplayNumber()} ()} for the scanned channel.
          */
         public void onScannedChannel(CharSequence displayName, CharSequence displayNumber) {
@@ -393,7 +377,6 @@ public class TvInputSetupActivity extends Activity {
                     mSyncStatusChangedReceiver,
                     new IntentFilter(EpgSyncJobService.ACTION_SYNC_STATUS_CHANGED));
         }
-
 
 
         @Override
@@ -477,23 +460,13 @@ public class TvInputSetupActivity extends Activity {
                 // Store the Setup Complete preference
                 TvUtils.setSetupComplete(getActivity(), true);
 
-                if (!mErrorFound) {
-                    EpgSyncJobService.cancelAllSyncRequests(getActivity());
-                    EpgSyncJobService.setUpPeriodicSync(getActivity(), mInputId,
-                            new ComponentName(getActivity(), EpgSyncJobService.class),
-                            FULL_SYNC_FREQUENCY_MILLIS, FULL_SYNC_WINDOW_SEC);
-                    getActivity().setResult(Activity.RESULT_OK);
-                } else {
-                    getActivity().setResult(Activity.RESULT_CANCELED);
-                }
 
-
-                // Start the EPG sync service
-                Intent intent = new Intent(getActivity(), EpgSyncJobService.class);
-                getActivity().startService(intent);
-
-                // Wrap up setup
+                EpgSyncJobService.cancelAllSyncRequests(getActivity());
+                EpgSyncJobService.setUpPeriodicSync(getActivity(), mInputId,
+                        new ComponentName(getActivity(), EpgSyncJobService.class),
+                        FULL_SYNC_FREQUENCY_MILLIS, FULL_SYNC_WINDOW_SEC);
                 getActivity().setResult(Activity.RESULT_OK);
+
                 getActivity().finish();
             }
         }

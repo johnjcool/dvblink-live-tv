@@ -139,7 +139,7 @@ public class TvUtils {
             genres.add(TvContract.Programs.Genres.ENTERTAINMENT);
         }
         if (program.isCatSpecial()) {
-            genres.add(TvContract.Programs.Genres.PREMIER);
+            genres.add(TvContract.Programs.Genres.ENTERTAINMENT);
         }
         if (program.isCatThriller()) {
             genres.add(TvContract.Programs.Genres.MOVIES);

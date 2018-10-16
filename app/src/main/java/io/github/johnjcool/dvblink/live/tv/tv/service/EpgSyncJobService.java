@@ -101,6 +101,7 @@ public class EpgSyncJobService extends com.google.android.media.tv.companionlibr
                                     .setDescription(program.getShortDesc())
                                     .setTitle(program.getName())
                                     .setPosterArtUri(program.getImage())
+                                    .setEpisodeNumber(1)
                                     .setCanonicalGenres(TvUtils.transformToGenres(program))
                                     .setStartTimeUtcMillis(program.getStartTime() * 1000)
                                     .setEndTimeUtcMillis((program.getStartTime() + program.getDuration()) * 1000)

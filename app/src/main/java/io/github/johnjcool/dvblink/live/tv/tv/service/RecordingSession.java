@@ -155,11 +155,21 @@ class RecordingSession extends BaseTvInputService.RecordingSession {
     private void createRecordedProgram(final Program programToRecord) throws Exception {
         RecordedTV recordedTV = mDvbLinkClient.getRecordedProgram(mRecording.getScheduleId());
 
-        programToRecord.getInternalProviderData().setVideoUrl(recordedTV.getUrl());
-        programToRecord.getInternalProviderData().setRecordingStartTime(TvUtils.transformToMillis(recordedTV.getCreationTime()));
+        InternalProviderData data = null;
+        try {
+            data = new InternalProviderData(programToRecord.getInternalProviderDataByteArray());
+            data.put(Constants.KEY_ORGINAL_PROGRAM_ID, programToRecord.getId());
+            data.setVideoUrl(recordedTV.getUrl());
+            data.setRecordingStartTime(TvUtils.transformToMillis(recordedTV.getCreationTime()));
+        } catch (InternalProviderData.ParseException e) {
+            Log.e(TAG, "Error parsing orginal program id.", e);
+        }
 
         RecordedProgram recordedProgram = new RecordedProgram.Builder(programToRecord)
+                .setInternalProviderData(data)
                 .setInputId(mInputId)
+                .setStartTimeUtcMillis(recordedTV.getVideoInfo().getStartTime() * 1000)
+                .setEndTimeUtcMillis((recordedTV.getVideoInfo().getStartTime() + recordedTV.getVideoInfo().getDuration()) * 1000)
                 .setRecordingDataUri(TvUtils.transformLocalhostToHost(recordedTV.getUrl(), mHost))
                 .setThumbnailUri(TvUtils.transformLocalhostToHost(recordedTV.getThumbnail(), mHost))
                 .build();
