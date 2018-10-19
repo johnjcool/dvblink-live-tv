@@ -3,30 +3,29 @@
     package="io.github.johnjcool.dvblink.live.tv">
 
     <!-- Required to play internet-based streaming contents. -->
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <!-- Required to check network connection status. -->
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!-- Required to read and update channel and program information in TvProvider. -->
-    <uses-permission android:name="com.android.providers.tv.permission.READ_EPG_DATA"/>
-    <uses-permission android:name="com.android.providers.tv.permission.WRITE_EPG_DATA"/>
+    <uses-permission android:name="com.android.providers.tv.permission.READ_EPG_DATA" />
+    <uses-permission android:name="com.android.providers.tv.permission.WRITE_EPG_DATA" />
 
     <!-- Required to use the android AccountManager -->
     <uses-permission
         android:name="android.permission.GET_ACCOUNTS"
-        android:maxSdkVersion="27"/>
-    <uses-permission android:name="android.permission.MANAGE_ACCOUNTS"/>
-    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"/>
+        android:maxSdkVersion="27" />
+    <uses-permission android:name="android.permission.MANAGE_ACCOUNTS" />
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
 
     <!-- Required for Syncing Data -->
-    <uses-permission android:name="android.permission.READ_SYNC_STATS"/>
-    <uses-permission android:name="android.permission.READ_SYNC_SETTINGS"/>
-    <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS"/>
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-
+    <uses-permission android:name="android.permission.READ_SYNC_STATS" />
+    <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
+    <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <uses-feature
         android:name="android.software.leanback"
@@ -44,7 +43,7 @@
     -->
     <uses-feature
         android:name="android.hardware.touchscreen"
-        android:required="false"/>
+        android:required="false" />
 
     <application
         android:name=".Application"
@@ -72,23 +71,22 @@
 
         <activity
             android:name="io.github.johnjcool.dvblink.live.tv.settings.SettingsActivity"
-            android:theme="@style/Theme.Preferences">
-        </activity>
+            android:theme="@style/Theme.Preferences"></activity>
 
         <activity
             android:name="io.github.johnjcool.dvblink.live.tv.account.AuthenticatorActivity"
-            android:label="@string/title_activity_authenticator"/>
+            android:label="@string/title_activity_authenticator" />
 
         <service
             android:name=".account.AuthenticatorService"
             android:permission="android.permission.ACCOUNT_MANAGER">
             <intent-filter>
-                <action android:name="android.accounts.AccountAuthenticator"/>
+                <action android:name="android.accounts.AccountAuthenticator" />
             </intent-filter>
 
             <meta-data
                 android:name="android.accounts.AccountAuthenticator"
-                android:resource="@xml/authenticatorservice"/>
+                android:resource="@xml/authenticatorservice" />
         </service>
         <!-- TV input which provides channels based on the streaming contents.
         Requires "android.permission.BIND_TV_INPUT" to ensure that only system services can bind.
@@ -112,9 +110,15 @@
 
         <!-- This service is for using JobScheduler to sync EPG data. -->
         <service
-            android:name="io.github.johnjcool.dvblink.live.tv.tv.service.EpgSyncJobService"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:exported="true" />
+            android:name="io.github.johnjcool.dvblink.live.tv.tv.service.epg.EpgSyncJobService"
+            android:exported="true"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <!-- This service is for using JobScheduler to sync EPG data. -->
+        <service
+            android:name="io.github.johnjcool.dvblink.live.tv.tv.service.dvr.DvrSyncService"
+            android:exported="true"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <!-- This receiver is for sync job schedule well after reboot. -->
         <receiver android:name="io.github.johnjcool.dvblink.live.tv.tv.receiver.TvBootReceiver">

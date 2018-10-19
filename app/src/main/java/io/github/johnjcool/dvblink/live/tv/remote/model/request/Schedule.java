@@ -4,10 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-import java.io.Serializable;
-
 @JsonRootName(value = "schedule", namespace = "http://www.dvblogic.com")
-public class Schedule implements Serializable {
+public class Schedule {
 
     @JsonProperty("user_param")
     private String userParam;

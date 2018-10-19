@@ -2,9 +2,7 @@ package io.github.johnjcool.dvblink.live.tv.remote.model.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.io.Serializable;
-
-public class ServerInfo implements Serializable {
+public class ServerInfo {
 
     @JsonProperty("install_id")
     private String installId;

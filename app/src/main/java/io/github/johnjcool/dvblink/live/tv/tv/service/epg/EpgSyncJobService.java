@@ -1,4 +1,4 @@
-package io.github.johnjcool.dvblink.live.tv.tv.service;
+package io.github.johnjcool.dvblink.live.tv.tv.service.epg;
 
 import android.media.tv.TvContract;
 import android.net.Uri;
@@ -91,7 +91,7 @@ public class EpgSyncJobService extends com.google.android.media.tv.companionlibr
                             InternalProviderData data = null;
                             try {
                                 data = new InternalProviderData(channel.getInternalProviderDataByteArray());
-                                data.put(Constants.KEY_ORGINAL_PROGRAM_ID, program.getId());
+                                data.put(Constants.KEY_ORGINAL_OBJECT_ID, program.getId());
                             } catch (InternalProviderData.ParseException e) {
                                 Log.e(TAG, "Error parsing orginal program id.", e);
                             }

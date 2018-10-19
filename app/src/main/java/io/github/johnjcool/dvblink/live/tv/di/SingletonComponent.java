@@ -1,6 +1,6 @@
 package io.github.johnjcool.dvblink.live.tv.di;
 
-import android.content.SharedPreferences;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -9,7 +9,7 @@ import dagger.Component;
 import io.github.johnjcool.dvblink.live.tv.remote.DvbLinkClient;
 
 @Singleton
-@Component(modules = {ContextModule.class, ServiceModule.class})
+@Component(modules = {AndroidModule.class, ServiceModule.class})
 public interface SingletonComponent {
 
     @Named("host")
@@ -17,5 +17,5 @@ public interface SingletonComponent {
 
     DvbLinkClient dvbLinkClient();
 
-    SharedPreferences sharedPreferences();
+    ObjectMapper objectMapper();
 }

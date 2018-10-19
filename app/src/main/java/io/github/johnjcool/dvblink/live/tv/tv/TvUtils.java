@@ -9,14 +9,21 @@ import android.media.tv.TvContract;
 import android.net.Uri;
 import android.util.Log;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.ModelUtils;
 import com.google.android.media.tv.companionlibrary.model.Program;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import io.github.johnjcool.dvblink.live.tv.Constants;
+import io.github.johnjcool.dvblink.live.tv.di.Injector;
+import io.github.johnjcool.dvblink.live.tv.remote.model.response.VideoInfo;
 
 public class TvUtils {
 
@@ -43,6 +50,8 @@ public class TvUtils {
 
         return sharedPreferences.getBoolean(Constants.KEY_SETUP_COMPLETE, false);
     }
+
+
 
     public static void removeChannels(Context context) {
         Uri channelsUri = TvContract.buildChannelsUriForInput(getInputId());
@@ -72,10 +81,8 @@ public class TvUtils {
         ComponentName componentName = new ComponentName(
                 "io.github.johnjcool.dvblink.live.tv",
                 ".tv.service.TvInputService");
-
         return TvContract.buildInputId(componentName);
     }
-
 
     public static Program getRecordingProgram(ContentResolver resolver, Uri channelUri, Uri programUri) {
         List<Program> programs = ModelUtils.getPrograms(resolver, channelUri);
@@ -91,60 +98,90 @@ public class TvUtils {
         return null;
     }
 
-    public static String[] transformToGenres(io.github.johnjcool.dvblink.live.tv.remote.model.response.Program program) {
+    public static Map<String, Uri> getRecordedProgramUriMapFromTif(ContentResolver resolver, Uri recordedProgramsUri) {
+        // Create a map from original network ID to channel row ID for existing channels.
+        Map<String, Uri> recordedProgramMap = new HashMap<>();
+//        Uri recordedProgramsUri = TvContract.RecordedPrograms.CONTENT_URI;
+        String[] projection = {TvContract.RecordedPrograms._ID, TvContract.RecordedPrograms.COLUMN_INTERNAL_PROVIDER_DATA};
+        try (Cursor cursor = resolver.query(recordedProgramsUri, projection, null, null, null)) {
+            while (cursor != null && cursor.moveToNext()) {
+                long rowId = cursor.getLong(0);
+                InternalProviderData internalProviderData = new InternalProviderData(cursor.getBlob(1));
+                recordedProgramMap.put(String.valueOf(internalProviderData.get(Constants.KEY_ORGINAL_OBJECT_ID)), TvContract.buildRecordedProgramUri(rowId));
+            }
+        } catch (InternalProviderData.ParseException e) {
+            Log.e(TAG, "Error in methode getRecordedProgramUriMapFromTif", e);
+        }
+        return recordedProgramMap;
+    }
+
+    public static long getChannelId(ContentResolver resolver, long orginalNetworkId) {
+        Uri channelsUri = TvContract.buildChannelsUriForInput(getInputId());
+        String[] projection = {TvContract.Channels._ID, TvContract.Channels.COLUMN_ORIGINAL_NETWORK_ID};
+        try (Cursor cursor = resolver.query(channelsUri, projection, null, null, null)) {
+            while (cursor != null && cursor.moveToNext()) {
+                if (cursor.getLong(1) == orginalNetworkId) {
+                    return cursor.getLong(0);
+                }
+            }
+        }
+        return INVALID_CHANNEL_ID;
+    }
+
+    public static String[] transformToGenres(VideoInfo videoInfo) {
         List<String> genres = new ArrayList<>();
-        if (program.isCatAction()) {
+        if (videoInfo.isCatAction()) {
             genres.add(TvContract.Programs.Genres.MOVIES);
         }
-        if (program.isCatComedy()) {
+        if (videoInfo.isCatComedy()) {
             genres.add(TvContract.Programs.Genres.COMEDY);
         }
-        if (program.isCatDocumentary()) {
+        if (videoInfo.isCatDocumentary()) {
             genres.add(TvContract.Programs.Genres.ANIMAL_WILDLIFE);
         }
-        if (program.isCatDrama()) {
+        if (videoInfo.isCatDrama()) {
             genres.add(TvContract.Programs.Genres.DRAMA);
         }
-        if (program.isCatEducational()) {
+        if (videoInfo.isCatEducational()) {
             genres.add(TvContract.Programs.Genres.EDUCATION);
         }
-        if (program.isCatHorror()) {
+        if (videoInfo.isCatHorror()) {
             genres.add(TvContract.Programs.Genres.MOVIES);
         }
-        if (program.isCatKids()) {
+        if (videoInfo.isCatKids()) {
             genres.add(TvContract.Programs.Genres.FAMILY_KIDS);
         }
-        if (program.isCatMovie()) {
+        if (videoInfo.isCatMovie()) {
             genres.add(TvContract.Programs.Genres.MOVIES);
         }
-        if (program.isCatMusic()) {
+        if (videoInfo.isCatMusic()) {
             genres.add(TvContract.Programs.Genres.MUSIC);
         }
-        if (program.isCatNews()) {
+        if (videoInfo.isCatNews()) {
             genres.add(TvContract.Programs.Genres.NEWS);
         }
-        if (program.isCatReality()) {
+        if (videoInfo.isCatReality()) {
             genres.add(TvContract.Programs.Genres.LIFE_STYLE);
         }
-        if (program.isCatRomance()) {
+        if (videoInfo.isCatRomance()) {
             genres.add(TvContract.Programs.Genres.MOVIES);
         }
-        if (program.isCatScifi()) {
+        if (videoInfo.isCatScifi()) {
             genres.add(TvContract.Programs.Genres.MOVIES);
         }
-        if (program.isCatSerial()) {
+        if (videoInfo.isCatSerial()) {
             genres.add(TvContract.Programs.Genres.ENTERTAINMENT);
         }
-        if (program.isCatSoap()) {
+        if (videoInfo.isCatSoap()) {
             genres.add(TvContract.Programs.Genres.ENTERTAINMENT);
         }
-        if (program.isCatSpecial()) {
+        if (videoInfo.isCatSpecial()) {
             genres.add(TvContract.Programs.Genres.ENTERTAINMENT);
         }
-        if (program.isCatThriller()) {
+        if (videoInfo.isCatThriller()) {
             genres.add(TvContract.Programs.Genres.MOVIES);
         }
-        if (program.isCatAdult()) {
+        if (videoInfo.isCatAdult()) {
             genres.add(TvContract.Programs.Genres.MOVIES);
         }
         return genres.stream().toArray(String[]::new);
@@ -155,5 +192,46 @@ public class TvUtils {
             source = source.replace("localhost", host);
         }
         return source;
+    }
+
+    public static Map<String, Uri> getRecordedProgramUriMapFromSharedPreferences(Context context) {
+        try {
+            SharedPreferences sharedPreferences = context.getSharedPreferences(
+                    Constants.PREFERENCE_TVHEADEND, Context.MODE_PRIVATE);
+            String cachedRecordedUri = sharedPreferences.getString(Constants.KEY_CACHED_RECODINGS_MAP, null);
+            ObjectMapper objectMapper = Injector.get().objectMapper();
+            TypeReference<HashMap<String, Uri>> typeRef
+                    = new TypeReference<HashMap<String, Uri>>() {
+            };
+            return objectMapper.readValue(cachedRecordedUri, typeRef);
+        } catch (Exception e) {
+            Log.w(TAG, "Exception reading recorded progam uri map from shared preferences", e);
+            return new HashMap<>();
+        }
+    }
+
+    public static boolean updateRecordedProgramUriMapFromSharedPreferences(Context context
+            , Map<String,Uri> recordedProgramUriMapFromSharedPreferences) {
+        try {
+            ObjectMapper objectMapper = Injector.get().objectMapper();
+
+            TypeReference<HashMap<String, Uri>> typeRef =
+                    new TypeReference<HashMap<String, Uri>>() {
+            };
+
+            String cachedRecordedUri = objectMapper
+                    .writeValueAsString(recordedProgramUriMapFromSharedPreferences);
+
+            SharedPreferences sharedPreferences = context.getSharedPreferences(
+                    Constants.PREFERENCE_TVHEADEND, Context.MODE_PRIVATE);
+
+            return sharedPreferences
+                    .edit()
+                    .putString(Constants.PREFERENCE_TVHEADEND, cachedRecordedUri)
+                    .commit();
+        } catch (Exception e) {
+            Log.w(TAG, "Exception reading recorded progam uri map from shared preferences", e);
+            return false;
+        }
     }
 }

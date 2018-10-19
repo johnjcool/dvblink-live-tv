@@ -3,8 +3,6 @@ package io.github.johnjcool.dvblink.live.tv.remote.model.request;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
 
-import java.io.Serializable;
-
 /**
  * Request xml data
  *<?xml version="1.0" encoding="utf-8" ?>
@@ -24,7 +22,7 @@ import java.io.Serializable;
  * </object_requester>
  */
 @JsonRootName(value = "object_requester", namespace = "http://www.dvblogic.com")
-public class ObjectRequester implements Serializable {
+public class ObjectRequester {
 
     @JsonProperty("object_id")
     private String objectId;

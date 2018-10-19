@@ -21,7 +21,6 @@ import android.support.v17.leanback.widget.GuidedActionsStylist;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,10 +28,9 @@ import io.github.johnjcool.dvblink.live.tv.Application;
 import io.github.johnjcool.dvblink.live.tv.Constants;
 import io.github.johnjcool.dvblink.live.tv.R;
 import io.github.johnjcool.dvblink.live.tv.account.AccountUtils;
-import io.github.johnjcool.dvblink.live.tv.di.Injector;
 import io.github.johnjcool.dvblink.live.tv.settings.SettingsActivity;
 import io.github.johnjcool.dvblink.live.tv.tv.TvUtils;
-import io.github.johnjcool.dvblink.live.tv.tv.service.EpgSyncJobService;
+import io.github.johnjcool.dvblink.live.tv.tv.service.epg.EpgSyncJobService;
 
 public class TvInputSetupActivity extends Activity {
     private static final String TAG = TvInputSetupActivity.class.getName();
@@ -343,7 +341,6 @@ public class TvInputSetupActivity extends Activity {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-
             mInputId = getActivity().getIntent().getStringExtra(TvInputInfo.EXTRA_INPUT_ID);
         }
 
@@ -367,8 +364,6 @@ public class TvInputSetupActivity extends Activity {
             editor.putString(Constants.KEY_PASSWORD, mAccountManager.getPassword(account));
             editor.apply();
 
-            SharedPreferences test = Injector.get().sharedPreferences();
-
             ((Application) getActivity().getApplication()).resetComponents();
             EpgSyncJobService.requestImmediateSync(getActivity(), mInputId,
                     new ComponentName(getActivity(), EpgSyncJobService.class));
@@ -377,7 +372,6 @@ public class TvInputSetupActivity extends Activity {
                     mSyncStatusChangedReceiver,
                     new IntentFilter(EpgSyncJobService.ACTION_SYNC_STATUS_CHANGED));
         }
-
 
         @Override
         public GuidedActionsStylist onCreateActionsStylist() {

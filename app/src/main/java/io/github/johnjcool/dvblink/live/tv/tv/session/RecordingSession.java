@@ -1,11 +1,10 @@
 
-package io.github.johnjcool.dvblink.live.tv.tv.service;
+package io.github.johnjcool.dvblink.live.tv.tv.session;
 
 import android.content.ContentResolver;
 import android.content.Context;
 import android.media.tv.TvInputManager;
 import android.net.Uri;
-import android.support.annotation.WorkerThread;
 import android.util.Log;
 
 import com.google.android.media.tv.companionlibrary.BaseTvInputService;
@@ -25,7 +24,7 @@ import io.github.johnjcool.dvblink.live.tv.remote.model.response.RecordedTV;
 import io.github.johnjcool.dvblink.live.tv.remote.model.response.Recording;
 import io.github.johnjcool.dvblink.live.tv.tv.TvUtils;
 
-class RecordingSession extends BaseTvInputService.RecordingSession {
+public class RecordingSession extends BaseTvInputService.RecordingSession {
 
     private static final long DEFAULT_CHANNEL_RECORDING_DURATION = TimeUnit.HOURS.convert(1, TimeUnit.SECONDS);
 
@@ -140,7 +139,7 @@ class RecordingSession extends BaseTvInputService.RecordingSession {
             Schedule schedule = new Schedule(
                     new Schedule.ByEpg(
                             String.valueOf(mChannel.getOriginalNetworkId()),
-                            String.valueOf(program.getInternalProviderData().get(Constants.KEY_ORGINAL_PROGRAM_ID))
+                            String.valueOf(program.getInternalProviderData().get(Constants.KEY_ORGINAL_OBJECT_ID))
                     )
             );
             mRecording = mDvbLinkClient.addSchedule(schedule);
@@ -158,7 +157,7 @@ class RecordingSession extends BaseTvInputService.RecordingSession {
         InternalProviderData data = null;
         try {
             data = new InternalProviderData(programToRecord.getInternalProviderDataByteArray());
-            data.put(Constants.KEY_ORGINAL_PROGRAM_ID, programToRecord.getId());
+            data.put(Constants.KEY_ORGINAL_OBJECT_ID, programToRecord.getId());
             data.setVideoUrl(recordedTV.getUrl());
             data.setRecordingStartTime(TvUtils.transformToMillis(recordedTV.getCreationTime()));
         } catch (InternalProviderData.ParseException e) {

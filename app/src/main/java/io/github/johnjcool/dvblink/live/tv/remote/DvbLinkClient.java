@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.github.johnjcool.dvblink.live.tv.remote.model.request.ItemType;
+import io.github.johnjcool.dvblink.live.tv.remote.model.request.ObjectRemover;
 import io.github.johnjcool.dvblink.live.tv.remote.model.request.ObjectRequester;
 import io.github.johnjcool.dvblink.live.tv.remote.model.request.ObjectType;
 import io.github.johnjcool.dvblink.live.tv.remote.model.request.RemoveRecording;
@@ -184,6 +185,21 @@ public class DvbLinkClient {
             return Collections.emptyList();
         }
         return recordedProgramsObject.getRecordedTVs();
+    }
+
+    public void removeRecordedProgram(String objectId) throws Exception {
+        String xmlData = mMapper.writer()
+                .with(ToXmlGenerator.Feature.WRITE_XML_DECLARATION)
+                .writeValueAsString(new ObjectRemover(objectId));
+        Call<Response> call = mDvbLinkApi.post("get_object", xmlData);
+        retrofit2.Response<Response> response = call.execute();
+        if (!response.isSuccessful()) {
+            throw new Exception(new StringBuilder()
+                    .append("Object with id could not be removed ")
+                    .append(objectId)
+                    .append(" could not be removed.")
+                    .toString());
+        }
     }
 
 

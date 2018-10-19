@@ -2,8 +2,6 @@ package io.github.johnjcool.dvblink.live.tv.remote.model.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.io.Serializable;
-
 import io.github.johnjcool.dvblink.live.tv.remote.model.request.ItemType;
 
 /**
@@ -22,7 +20,7 @@ import io.github.johnjcool.dvblink.live.tv.remote.model.request.ItemType;
  * EFC0-4D91-9B29-EC3D72E92677 – is the built-in dvblink recorder, e.g. Recorded TV items)
  * </container>
  */
-public class Container implements Serializable {
+public class Container {
 
     @JsonProperty("object_id")
     private String objectId;

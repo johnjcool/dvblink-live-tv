@@ -6,7 +6,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import java.io.Serializable;
 import java.util.List;
 
-public class Channel implements Serializable {
+public class Channel {
 
     @JsonProperty("channel_child_lock")
     private boolean channelChildLock;

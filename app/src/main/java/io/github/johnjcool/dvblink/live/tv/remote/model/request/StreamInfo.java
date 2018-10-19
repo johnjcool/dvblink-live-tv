@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
-import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -23,7 +22,7 @@ import java.util.List;
  * </ stream_info>
  */
 @JsonRootName(value = "stream_info", namespace = "http://www.dvblogic.com")
-public class StreamInfo implements Serializable {
+public class StreamInfo {
 
     @JsonProperty("client_id")
     private String clientId;

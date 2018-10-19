@@ -1,9 +1,9 @@
 package io.github.johnjcool.dvblink.live.tv.di;
 
-import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
@@ -18,7 +18,6 @@ import dagger.Provides;
 import io.github.johnjcool.dvblink.live.tv.Constants;
 import io.github.johnjcool.dvblink.live.tv.remote.DvbLinkApi;
 import io.github.johnjcool.dvblink.live.tv.remote.DvbLinkClient;
-import io.github.johnjcool.dvblink.live.tv.tv.service.EpgSyncJobService;
 import okhttp3.Credentials;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -29,12 +28,6 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 public class ServiceModule {
 
     private static final String URL_TMPL = "http://%s:%d/";
-
-    @Provides
-    @Singleton
-    SharedPreferences providesSharedPreferences(Context context) {
-        return context.getSharedPreferences(EpgSyncJobService.PREFERENCE_EPG_SYNC, Context.MODE_PRIVATE);
-    }
 
     @Provides
     @Singleton
@@ -80,6 +73,15 @@ public class ServiceModule {
     @Singleton
     public XmlMapper provideXmlMapper() {
         XmlMapper mapper = new XmlMapper();
+        mapper.enable(SerializationFeature.WRITE_ENUMS_USING_TO_STRING);
+        mapper.enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING);
+        return mapper;
+    }
+
+    @Provides
+    @Singleton
+    public ObjectMapper provideObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.WRITE_ENUMS_USING_TO_STRING);
         mapper.enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING);
         return mapper;
