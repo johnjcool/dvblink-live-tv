@@ -11,6 +11,7 @@ import android.util.Log;
 import java.util.List;
 
 import io.github.johnjcool.dvblink.live.tv.tv.TvUtils;
+import io.github.johnjcool.dvblink.live.tv.tv.activity.TvInputSetupActivity;
 import io.github.johnjcool.dvblink.live.tv.tv.service.dvr.DvrSyncService;
 import io.github.johnjcool.dvblink.live.tv.tv.service.epg.EpgSyncJobService;
 
@@ -46,11 +47,21 @@ public class TvBootReceiver extends BroadcastReceiver {
 
     private void startEpgSync(Context context, String inputId) {
         Log.d(TAG, (new StringBuilder()).append("startEpgSync: ").append(inputId).toString());
-        EpgSyncJobService.setUpPeriodicSync(context, inputId, new ComponentName(context, DvrSyncService.class));
+        EpgSyncJobService.setUpPeriodicSync(
+                context,
+                inputId,
+                new ComponentName(context, DvrSyncService.class),
+                TvInputSetupActivity.FULL_SYNC_FREQUENCY_MILLIS,
+                TvInputSetupActivity.FULL_SYNC_WINDOW_SEC
+        );
     }
 
     private void startRecordsSync(Context context, String inputId) {
         Log.d(TAG, (new StringBuilder()).append("startRecordsSync: ").append(inputId).toString());
-        DvrSyncService.setUpPeriodicSync(context, inputId, new ComponentName(context, DvrSyncService.class));
+        DvrSyncService.setUpPeriodicSync(
+                context,
+                inputId,
+                new ComponentName(context, DvrSyncService.class)
+        );
     }
 }

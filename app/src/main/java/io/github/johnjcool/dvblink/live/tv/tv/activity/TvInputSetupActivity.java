@@ -23,6 +23,7 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.github.johnjcool.dvblink.live.tv.Application;
 import io.github.johnjcool.dvblink.live.tv.Constants;
@@ -30,23 +31,23 @@ import io.github.johnjcool.dvblink.live.tv.R;
 import io.github.johnjcool.dvblink.live.tv.account.AccountUtils;
 import io.github.johnjcool.dvblink.live.tv.settings.SettingsActivity;
 import io.github.johnjcool.dvblink.live.tv.tv.TvUtils;
+import io.github.johnjcool.dvblink.live.tv.tv.service.dvr.DvrSyncService;
+import io.github.johnjcool.dvblink.live.tv.tv.service.dvr.DvrSyncTask;
 import io.github.johnjcool.dvblink.live.tv.tv.service.epg.EpgSyncJobService;
 
 public class TvInputSetupActivity extends Activity {
     private static final String TAG = TvInputSetupActivity.class.getName();
 
     public static final long FULL_SYNC_FREQUENCY_MILLIS = 1000 * 60 * 60 * 24;  // 24 hour
-    private static final long FULL_SYNC_WINDOW_SEC = 1000 * 60 * 60 * 24 * 14;  // 2 weeks
+    public static final long FULL_SYNC_WINDOW_SEC = 1000 * 60 * 60 * 24 * 14;  // 2 weeks
 
     static AccountManager mAccountManager;
     static Account sAccount;
-    static boolean mErrorFound;
     static String mInputId = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         GuidedStepFragment fragment = new IntroFragment();
         fragment.setArguments(getIntent().getExtras());
         GuidedStepFragment.addAsRoot(this, fragment, android.R.id.content);
@@ -365,8 +366,13 @@ public class TvInputSetupActivity extends Activity {
             editor.apply();
 
             ((Application) getActivity().getApplication()).resetComponents();
+
             EpgSyncJobService.requestImmediateSync(getActivity(), mInputId,
+                    TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS),
                     new ComponentName(getActivity(), EpgSyncJobService.class));
+
+            DvrSyncService.requestImmediateSync(getActivity(), mInputId,
+                    new ComponentName(getActivity(), DvrSyncService.class));
 
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(
                     mSyncStatusChangedReceiver,
@@ -459,8 +465,13 @@ public class TvInputSetupActivity extends Activity {
                 EpgSyncJobService.setUpPeriodicSync(getActivity(), mInputId,
                         new ComponentName(getActivity(), EpgSyncJobService.class),
                         FULL_SYNC_FREQUENCY_MILLIS, FULL_SYNC_WINDOW_SEC);
-                getActivity().setResult(Activity.RESULT_OK);
 
+                DvrSyncService.cancelAllSyncRequests(getActivity());
+                DvrSyncService.setUpPeriodicSync(getActivity(), mInputId,
+                        new ComponentName(getActivity(), DvrSyncService.class));
+
+
+                getActivity().setResult(Activity.RESULT_OK);
                 getActivity().finish();
             }
         }

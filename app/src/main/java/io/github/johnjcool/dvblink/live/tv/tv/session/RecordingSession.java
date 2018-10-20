@@ -13,6 +13,7 @@ import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.ModelUtils;
 import com.google.android.media.tv.companionlibrary.model.Program;
 import com.google.android.media.tv.companionlibrary.model.RecordedProgram;
+import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
 import java.util.concurrent.TimeUnit;
 
@@ -157,9 +158,10 @@ public class RecordingSession extends BaseTvInputService.RecordingSession {
         InternalProviderData data = null;
         try {
             data = new InternalProviderData(programToRecord.getInternalProviderDataByteArray());
-            data.put(Constants.KEY_ORGINAL_OBJECT_ID, programToRecord.getId());
+            data.put(Constants.KEY_ORGINAL_OBJECT_ID, recordedTV.getObjectId());
             data.setVideoUrl(recordedTV.getUrl());
-            data.setRecordingStartTime(TvUtils.transformToMillis(recordedTV.getCreationTime()));
+            data.setVideoType(TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE);
+            data.setRecordingStartTime(TvUtils.transformToMillis(recordedTV.getVideoInfo().getStartTime()));
         } catch (InternalProviderData.ParseException e) {
             Log.e(TAG, "Error parsing orginal program id.", e);
         }
@@ -167,8 +169,8 @@ public class RecordingSession extends BaseTvInputService.RecordingSession {
         RecordedProgram recordedProgram = new RecordedProgram.Builder(programToRecord)
                 .setInternalProviderData(data)
                 .setInputId(mInputId)
-                .setStartTimeUtcMillis(recordedTV.getVideoInfo().getStartTime() * 1000)
-                .setEndTimeUtcMillis((recordedTV.getVideoInfo().getStartTime() + recordedTV.getVideoInfo().getDuration()) * 1000)
+                .setStartTimeUtcMillis(TvUtils.transformToMillis(recordedTV.getVideoInfo().getStartTime()))
+                .setEndTimeUtcMillis(TvUtils.transformToMillis(recordedTV.getVideoInfo().getStartTime() + recordedTV.getVideoInfo().getDuration()))
                 .setRecordingDataUri(TvUtils.transformLocalhostToHost(recordedTV.getUrl(), mHost))
                 .setThumbnailUri(TvUtils.transformLocalhostToHost(recordedTV.getThumbnail(), mHost))
                 .build();

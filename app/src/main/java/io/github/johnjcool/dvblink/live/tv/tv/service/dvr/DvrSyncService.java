@@ -15,6 +15,7 @@ import junit.framework.Assert;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import io.github.johnjcool.dvblink.live.tv.tv.TvUtils;
 
@@ -40,8 +41,8 @@ public class DvrSyncService extends JobService {
 
 
     private static final boolean DEBUG = true;
-    private static final long DEFAULT_BACKOFF_TIME = 2 * 60 * 1000;
-    private static final long DEFAULT_PERIODIC_RECORDS_SYNC_TIME = 1000 * 60 * 60 * 1;
+    private static final long DEFAULT_BACKOFF_TIME = TimeUnit.MILLISECONDS.convert(2, TimeUnit.MINUTES);
+    private static final long DEFAULT_PERIODIC_RECORDS_SYNC_TIME = TimeUnit.MILLISECONDS.convert(15, TimeUnit.MINUTES);
 
     private static final Object mContextLock = new Object();
     private Context mContext;

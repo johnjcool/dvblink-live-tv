@@ -125,19 +125,37 @@ public class DvbLinkClient {
             throw new Exception(response.errorBody().string());
         }
 
-        Thread.sleep(1500);
         List<Recording> recordings = getRecordings();
         for (Recording recording : recordings) {
-            if (recording.isActive()) {
-                if (schedule.isByEpg() && recording.getChannelId().equals(schedule.getByEpg().getChannelId())) {
-                    return recording;
-                }
-                if (schedule.isManual() && recording.getChannelId().equals(schedule.getManual().getChannelId())) {
-                    return recording;
-                }
+            if (schedule.isByEpg()
+                    && recording.getChannelId().equals(schedule.getByEpg().getChannelId())
+                    && recording.getProgram().getId().equals(schedule.getByEpg().getProgramId())) {
+                return recording;
+            }
+            if (schedule.isManual()
+                    && recording.getChannelId().equals(schedule.getManual().getChannelId())) {
+                return recording;
             }
         }
-        throw new Exception("Recording not added...");
+
+        String message = String.format("Something went wrong for reording [%s]", schedule.toString());
+        if (schedule.isByEpg()) {
+            message = new StringBuilder()
+                    .append("Recording for program ")
+                    .append(schedule.getByEpg().getProgramId())
+                    .append(" and channel ")
+                    .append(schedule.getByEpg().getChannelId())
+                    .append(" not added...")
+                    .toString();
+        }
+        if (schedule.isManual()) {
+            message = new StringBuilder()
+                    .append("Recording for channel")
+                    .append(schedule.getManual().getChannelId())
+                    .append(" not added!")
+                    .toString();
+        }
+        throw new Exception(message);
     }
 
     public List<Recording> getRecordings() throws Exception {

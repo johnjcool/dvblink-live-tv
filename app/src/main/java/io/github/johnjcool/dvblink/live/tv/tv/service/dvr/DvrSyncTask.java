@@ -9,6 +9,7 @@ import android.util.Log;
 import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.Program;
 import com.google.android.media.tv.companionlibrary.model.RecordedProgram;
+import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -29,9 +30,11 @@ public class DvrSyncTask extends AsyncTask<Void, Void, Void> {
 
     private DvbLinkClient mDvbLinkClient;
     private String mHost;
+    private String mInputId;
 
     public DvrSyncTask(Context context, String inputId) {
         mContext = context;
+        mInputId = inputId;
         mDvbLinkClient = Injector.get().dvbLinkClient();
         mHost = Injector.get().host();
     }
@@ -103,6 +106,9 @@ public class DvrSyncTask extends AsyncTask<Void, Void, Void> {
                         try {
                             data = new InternalProviderData();
                             data.put(Constants.KEY_ORGINAL_OBJECT_ID, recordedTV.getObjectId());
+                            data.setRecordingStartTime(TvUtils.transformToMillis(recordedTV.getVideoInfo().getStartTime()));
+                            data.setVideoUrl(TvUtils.transformLocalhostToHost(recordedTV.getUrl(), mHost));
+                            data.setVideoType(TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE);
                         } catch (InternalProviderData.ParseException e) {
                             Log.e(TAG, "Error parsing orginal program id.", e);
                         }
@@ -126,7 +132,7 @@ public class DvrSyncTask extends AsyncTask<Void, Void, Void> {
                                 .setThumbnailUri(recordedTV.getThumbnail())
                                 .setTitle(recordedTV.getScheduleName())
                                 .build();
-                        return new RecordedProgram.Builder(program).build();
+                        return new RecordedProgram.Builder(program).setInputId(mInputId).build();
                     }
                 };
         List<RecordedProgram> recordedPrograms = toAddRecordedProgramMap.values().stream().map(programTransform).collect(Collectors.<RecordedProgram>toList());

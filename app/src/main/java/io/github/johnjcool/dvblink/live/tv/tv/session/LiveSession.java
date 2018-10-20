@@ -254,7 +254,6 @@ public class LiveSession extends BaseTvInputService.Session {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
     public boolean onPlayRecordedProgram(RecordedProgram recordedProgram) {
         createPlayer(recordedProgram.getInternalProviderData().getVideoType(),
                 Uri.parse(recordedProgram.getInternalProviderData().getVideoUrl()));
@@ -262,9 +261,7 @@ public class LiveSession extends BaseTvInputService.Session {
         long recordingStartTime = recordedProgram.getInternalProviderData()
                 .getRecordedProgramStartTime();
         mPlayer.seekTo(recordingStartTime - recordedProgram.getStartTimeUtcMillis());
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            notifyTimeShiftStatusChanged(TvInputManager.TIME_SHIFT_STATUS_AVAILABLE);
-        }
+        notifyTimeShiftStatusChanged(TvInputManager.TIME_SHIFT_STATUS_AVAILABLE);
         mPlayer.play();
         notifyVideoAvailable();
         return true;
@@ -358,15 +355,4 @@ public class LiveSession extends BaseTvInputService.Session {
         super.onBlockContent(rating);
         releasePlayer();
     }
-
-//        private void requestEpgSync(final Uri channelUri) {
-//            EpgSyncJobService.requestImmediateSync(TvInputService.this, mInputId,
-//                    new ComponentName(TvInputService.this, EpgSyncJobService.class));
-//            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-//                @Override
-//                public void run() {
-//                    onTune(channelUri);
-//                }
-//            }, EPG_SYNC_DELAYED_PERIOD_MS);
-//        }
 }

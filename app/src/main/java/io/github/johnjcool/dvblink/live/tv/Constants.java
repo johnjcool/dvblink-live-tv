@@ -34,7 +34,8 @@ public class Constants {
     public static final String KEY_SETUP_COMPLETE = "SETUP-COMPLETE";
 
     // Extension for InternalDataProvider
-    public static final String KEY_ORGINAL_OBJECT_ID = "orginalObjectId";
+    public static final String KEY_ORGINAL_OBJECT_ID = "orginal_object_id";
+    public static final String KEY_ORGINAL_PROGRAM_ID = "orginal_program_Id";
 
     // Audio and Video Preferences Keys and Values
     public static final String KEY_BUFFER_PLAYBACK_MS = "buffer_playback_ms";

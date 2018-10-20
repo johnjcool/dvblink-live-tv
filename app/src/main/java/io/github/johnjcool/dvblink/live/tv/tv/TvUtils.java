@@ -2,24 +2,31 @@ package io.github.johnjcool.dvblink.live.tv.tv;
 
 import android.content.ComponentName;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.media.tv.TvContract;
 import android.net.Uri;
+import android.os.Parcel;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.ModelUtils;
 import com.google.android.media.tv.companionlibrary.model.Program;
+import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import io.github.johnjcool.dvblink.live.tv.Constants;
 import io.github.johnjcool.dvblink.live.tv.di.Injector;
@@ -28,6 +35,10 @@ import io.github.johnjcool.dvblink.live.tv.remote.model.response.VideoInfo;
 public class TvUtils {
 
     public static final long INVALID_CHANNEL_ID = -1;
+
+    private static final TypeReference<HashMap<String, String>> typeReference =
+            new TypeReference<HashMap<String, String>>() {
+            };
 
     private TvUtils() {
         throw new IllegalAccessError("Utility class");
@@ -50,7 +61,6 @@ public class TvUtils {
 
         return sharedPreferences.getBoolean(Constants.KEY_SETUP_COMPLETE, false);
     }
-
 
 
     public static void removeChannels(Context context) {
@@ -101,7 +111,6 @@ public class TvUtils {
     public static Map<String, Uri> getRecordedProgramUriMapFromTif(ContentResolver resolver, Uri recordedProgramsUri) {
         // Create a map from original network ID to channel row ID for existing channels.
         Map<String, Uri> recordedProgramMap = new HashMap<>();
-//        Uri recordedProgramsUri = TvContract.RecordedPrograms.CONTENT_URI;
         String[] projection = {TvContract.RecordedPrograms._ID, TvContract.RecordedPrograms.COLUMN_INTERNAL_PROVIDER_DATA};
         try (Cursor cursor = resolver.query(recordedProgramsUri, projection, null, null, null)) {
             while (cursor != null && cursor.moveToNext()) {
@@ -110,7 +119,7 @@ public class TvUtils {
                 recordedProgramMap.put(String.valueOf(internalProviderData.get(Constants.KEY_ORGINAL_OBJECT_ID)), TvContract.buildRecordedProgramUri(rowId));
             }
         } catch (InternalProviderData.ParseException e) {
-            Log.e(TAG, "Error in methode getRecordedProgramUriMapFromTif", e);
+            Log.e(TAG, "Error in method getRecordedProgramUriMapFromTif", e);
         }
         return recordedProgramMap;
     }
@@ -200,10 +209,14 @@ public class TvUtils {
                     Constants.PREFERENCE_TVHEADEND, Context.MODE_PRIVATE);
             String cachedRecordedUri = sharedPreferences.getString(Constants.KEY_CACHED_RECODINGS_MAP, null);
             ObjectMapper objectMapper = Injector.get().objectMapper();
-            TypeReference<HashMap<String, Uri>> typeRef
-                    = new TypeReference<HashMap<String, Uri>>() {
-            };
-            return objectMapper.readValue(cachedRecordedUri, typeRef);
+            Map<String, String> cachedRecordedStringMap = objectMapper.readValue(cachedRecordedUri, typeReference);
+            return cachedRecordedStringMap
+                    .entrySet()
+                    .stream()
+                    .collect(Collectors.toMap(
+                            entry -> entry.getKey(),
+                            entry -> Uri.parse(entry.getValue()))
+                    );
         } catch (Exception e) {
             Log.w(TAG, "Exception reading recorded progam uri map from shared preferences", e);
             return new HashMap<>();
@@ -211,23 +224,25 @@ public class TvUtils {
     }
 
     public static boolean updateRecordedProgramUriMapFromSharedPreferences(Context context
-            , Map<String,Uri> recordedProgramUriMapFromSharedPreferences) {
+            , Map<String, Uri> recordedProgramUriMapFromSharedPreferences) {
         try {
             ObjectMapper objectMapper = Injector.get().objectMapper();
 
-            TypeReference<HashMap<String, Uri>> typeRef =
-                    new TypeReference<HashMap<String, Uri>>() {
-            };
+            Map<String, String> cachedRecordedStringMap = recordedProgramUriMapFromSharedPreferences
+                    .entrySet()
+                    .stream()
+                    .collect(Collectors
+                            .toMap(entry -> entry.getKey(), entry -> entry.getValue().toString()));
 
-            String cachedRecordedUri = objectMapper
-                    .writeValueAsString(recordedProgramUriMapFromSharedPreferences);
+            String cachedRecordedString = objectMapper
+                    .writeValueAsString(cachedRecordedStringMap);
 
             SharedPreferences sharedPreferences = context.getSharedPreferences(
                     Constants.PREFERENCE_TVHEADEND, Context.MODE_PRIVATE);
 
             return sharedPreferences
                     .edit()
-                    .putString(Constants.PREFERENCE_TVHEADEND, cachedRecordedUri)
+                    .putString(Constants.PREFERENCE_TVHEADEND, cachedRecordedString)
                     .commit();
         } catch (Exception e) {
             Log.w(TAG, "Exception reading recorded progam uri map from shared preferences", e);
