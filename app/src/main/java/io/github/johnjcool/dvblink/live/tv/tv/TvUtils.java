@@ -242,7 +242,7 @@ public class TvUtils {
 
             return sharedPreferences
                     .edit()
-                    .putString(Constants.PREFERENCE_TVHEADEND, cachedRecordedString)
+                    .putString(Constants.KEY_CACHED_RECODINGS_MAP, cachedRecordedString)
                     .commit();
         } catch (Exception e) {
             Log.w(TAG, "Exception reading recorded progam uri map from shared preferences", e);

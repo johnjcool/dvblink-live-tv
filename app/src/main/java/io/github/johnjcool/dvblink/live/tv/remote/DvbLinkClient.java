@@ -209,13 +209,14 @@ public class DvbLinkClient {
         String xmlData = mMapper.writer()
                 .with(ToXmlGenerator.Feature.WRITE_XML_DECLARATION)
                 .writeValueAsString(new ObjectRemover(objectId));
-        Call<Response> call = mDvbLinkApi.post("get_object", xmlData);
+        Call<Response> call = mDvbLinkApi.post("remove_object", xmlData);
         retrofit2.Response<Response> response = call.execute();
-        if (!response.isSuccessful()) {
+        if (!response.isSuccessful() || response.body().getStatusCode() != StatusCode.STATUS_OK) {
             throw new Exception(new StringBuilder()
                     .append("Object with id could not be removed ")
                     .append(objectId)
                     .append(" could not be removed.")
+                    .append(response.body().getStatusCode().name())
                     .toString());
         }
     }

@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import io.github.johnjcool.dvblink.live.tv.di.AndroidModule;
 import io.github.johnjcool.dvblink.live.tv.di.DaggerSingletonComponent;
+import io.github.johnjcool.dvblink.live.tv.di.Injector;
 import io.github.johnjcool.dvblink.live.tv.di.ServiceModule;
 import io.github.johnjcool.dvblink.live.tv.di.SingletonComponent;
 import io.github.johnjcool.dvblink.live.tv.tv.TvUtils;
@@ -115,20 +116,25 @@ public class Application extends android.app.Application {
 
 
                 toDeleteMap.entrySet().forEach(entry -> {
-                    try {
-                        mSingletonComponent.dvbLinkClient().removeRecordedProgram(entry.getKey());
-                        Log.i(TAG, (new StringBuilder())
-                                .append("onChange, object removed from server ")
-                                .append(entry.getKey())
-                                .toString()
-                        );
-                    } catch (Exception e) {
-                        Log.e(TAG, new StringBuilder()
-                                .append("onChange, object could not be removed from server ")
-                                .append(entry.getKey())
-                                .toString(), e
-                        );
-                    }
+                    new Thread() {
+                        @Override
+                        public void run() {
+                            try {
+                                Injector.get().dvbLinkClient().removeRecordedProgram(entry.getKey());
+                                Log.i(TAG, (new StringBuilder())
+                                        .append("onChange, object removed from server ")
+                                        .append(entry.getKey())
+                                        .toString()
+                                );
+                            } catch (Exception e) {
+                                Log.e(TAG, new StringBuilder()
+                                        .append("onChange, object could not be removed from server ")
+                                        .append(entry.getKey())
+                                        .toString(), e
+                                );
+                            }
+                        }
+                    }.start();
                     // TODO: remove also from map because of inconsistency
                     if (recordedProgramUriMapFromSharedPreferences.remove(entry.getKey()) != null) {
                         TvUtils.updateRecordedProgramUriMapFromSharedPreferences(Application.this, recordedProgramUriMapFromSharedPreferences);
