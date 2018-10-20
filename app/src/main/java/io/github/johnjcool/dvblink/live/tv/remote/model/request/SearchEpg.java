@@ -5,11 +5,10 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
-import java.io.Serializable;
 import java.util.List;
 
 @JsonRootName(value = "epg_searcher", namespace = "http://www.dvblogic.com")
-public class SearchEpg implements Serializable {
+public class SearchEpg {
 
     @JacksonXmlElementWrapper(localName = "channels_ids")
     @JacksonXmlProperty(localName = "channel_id")
@@ -26,9 +25,6 @@ public class SearchEpg implements Serializable {
     private long startTime;
     @JsonProperty("genre_mask")
     private long genreMask;
-
-    public SearchEpg() {
-    }
 
     public SearchEpg(List<String> channelIds, long startTime, long endTime) {
         this.channelIds = channelIds;

@@ -3,7 +3,6 @@ package io.github.johnjcool.dvblink.live.tv.remote.model.response;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 
-import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -18,7 +17,7 @@ import java.util.List;
  </channel>
  </ stream_info>
  */
-public class StreamInfo implements Serializable {
+public class StreamInfo {
 
     @JacksonXmlElementWrapper(useWrapping = false)
     @JsonProperty("channel")

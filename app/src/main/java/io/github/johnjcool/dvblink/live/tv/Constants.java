@@ -33,6 +33,10 @@ public class Constants {
     // Misc Preference Keys and Values
     public static final String KEY_SETUP_COMPLETE = "SETUP-COMPLETE";
 
+    // Extension for InternalDataProvider
+    public static final String KEY_ORGINAL_OBJECT_ID = "orginal_object_id";
+    public static final String KEY_ORGINAL_PROGRAM_ID = "orginal_program_Id";
+
     // Audio and Video Preferences Keys and Values
     public static final String KEY_BUFFER_PLAYBACK_MS = "buffer_playback_ms";
     public static final String KEY_AUDIO_PASSTHROUGH_DECODER_ENABLED = "audio_passthrough_decodeder_enabled";
@@ -54,6 +58,7 @@ public class Constants {
     public static final String KEY_USERNAME = "USERNAME";
     public static final String KEY_PASSWORD = "PASSWORD";
     public static final String KEY_ERROR_MESSAGE = "ERROR-MESSAGE";
+    public static final String KEY_CACHED_RECODINGS_MAP = "CACHED-RECODINGS-MAP";
 
     // Session Selection Preference Keys and Values
     public static final String KEY_EPG_SYNC_ENABLED = "epg_sync_enabled";

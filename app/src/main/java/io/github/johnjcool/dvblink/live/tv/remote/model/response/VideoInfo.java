@@ -2,10 +2,8 @@ package io.github.johnjcool.dvblink.live.tv.remote.model.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.io.Serializable;
 
-
-public class VideoInfo implements Serializable {
+public class VideoInfo {
 
     @JsonProperty("name")
     private String name;
@@ -37,8 +35,8 @@ public class VideoInfo implements Serializable {
 
     @JsonProperty("year")
     private int year;
-    @JsonProperty("epcatode_num")
-    private int epcatodeNum;
+    @JsonProperty("episode_num")
+    private int episodeNum;
     @JsonProperty("season_num")
     private int seasonNum;
     @JsonProperty("stars_num")
@@ -203,12 +201,12 @@ public class VideoInfo implements Serializable {
         this.year = year;
     }
 
-    public int getEpcatodeNum() {
-        return epcatodeNum;
+    public int getEpisodeNum() {
+        return episodeNum;
     }
 
-    public void setEpcatodeNum(int epcatodeNum) {
-        this.epcatodeNum = epcatodeNum;
+    public void setEpisodeNum(int episodeNum) {
+        this.episodeNum = episodeNum;
     }
 
     public int getSeasonNum() {
@@ -428,7 +426,7 @@ public class VideoInfo implements Serializable {
                 ", categories='" + categories + '\'' +
                 ", image='" + image + '\'' +
                 ", year=" + year +
-                ", epcatodeNum=" + epcatodeNum +
+                ", episodeNum=" + episodeNum +
                 ", seasonNum=" + seasonNum +
                 ", starsNum=" + starsNum +
                 ", starsMaxNum=" + starsMaxNum +

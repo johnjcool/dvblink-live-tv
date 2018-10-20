@@ -33,7 +33,6 @@ import java.util.List;
 
 import io.github.johnjcool.dvblink.live.tv.Constants;
 import io.github.johnjcool.dvblink.live.tv.R;
-import io.github.johnjcool.dvblink.live.tv.remote.DvbLinkClient;
 import io.github.johnjcool.dvblink.live.tv.remote.model.response.ServerInfo;
 
 
@@ -292,21 +291,19 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
         @Override
         public void onStart() {
             super.onStart();
-
             Bundle args = getArguments();
             mAccountType = args.getString(AccountManager.KEY_ACCOUNT_TYPE);
             mAccountName = args.getString(Constants.KEY_USERNAME);
             mAccountPassword = args.getString(Constants.KEY_PASSWORD);
             mAccountHostname = args.getString(Constants.KEY_HOSTNAME);
             mAccountHttpPort = args.getString(Constants.KEY_PORT);
-
-            DvbLinkClient controller = new DvbLinkClient(
-                    mAccountHostname,
-                    Integer.parseInt(mAccountHttpPort),
-                    mAccountName,
-                    mAccountPassword);
             try {
-                ServerInfo serverInfo = controller.getServerInfo();
+                ServerInfo serverInfo = AccountUtils.getDvbLinkClient(
+                        mAccountHostname,
+                        Integer.parseInt(mAccountHttpPort),
+                        mAccountName,
+                        mAccountPassword
+                ).getServerInfo();
 
                 Log.d(TAG, serverInfo.toString());
 

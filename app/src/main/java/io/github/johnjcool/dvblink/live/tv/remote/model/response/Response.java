@@ -2,9 +2,7 @@ package io.github.johnjcool.dvblink.live.tv.remote.model.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.io.Serializable;
-
-public class Response implements Serializable {
+public class Response {
 
     @JsonProperty("xml_result")
     private String xmlResult;

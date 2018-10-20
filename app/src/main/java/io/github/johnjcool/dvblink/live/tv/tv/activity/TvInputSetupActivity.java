@@ -21,32 +21,33 @@ import android.support.v17.leanback.widget.GuidedActionsStylist;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import io.github.johnjcool.dvblink.live.tv.Application;
 import io.github.johnjcool.dvblink.live.tv.Constants;
 import io.github.johnjcool.dvblink.live.tv.R;
 import io.github.johnjcool.dvblink.live.tv.account.AccountUtils;
 import io.github.johnjcool.dvblink.live.tv.settings.SettingsActivity;
 import io.github.johnjcool.dvblink.live.tv.tv.TvUtils;
-import io.github.johnjcool.dvblink.live.tv.tv.service.EpgSyncJobService;
+import io.github.johnjcool.dvblink.live.tv.tv.service.dvr.DvrSyncService;
+import io.github.johnjcool.dvblink.live.tv.tv.service.dvr.DvrSyncTask;
+import io.github.johnjcool.dvblink.live.tv.tv.service.epg.EpgSyncJobService;
 
 public class TvInputSetupActivity extends Activity {
     private static final String TAG = TvInputSetupActivity.class.getName();
 
-    public static final long FULL_SYNC_FREQUENCY_MILLIS = 1000 * 60 * 60 * 24;  // 24 hour
-    private static final long FULL_SYNC_WINDOW_SEC = 1000 * 60 * 60 * 24 * 14;  // 2 weeks
+    public static final long FULL_SYNC_FREQUENCY_MILLIS = TimeUnit.MILLISECONDS.convert(6, TimeUnit.HOURS);
+    public static final long FULL_SYNC_WINDOW_SEC = TimeUnit.MILLISECONDS.convert(14, TimeUnit.DAYS);  // 2 weeks
 
     static AccountManager mAccountManager;
     static Account sAccount;
-    static boolean mErrorFound;
     static String mInputId = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         GuidedStepFragment fragment = new IntroFragment();
         fragment.setArguments(getIntent().getExtras());
         GuidedStepFragment.addAsRoot(this, fragment, android.R.id.content);
@@ -304,28 +305,12 @@ public class TvInputSetupActivity extends Activity {
                                                 0);
 
                                 Log.d(TAG, "Error occurred: " + errorCode);
-
-                                onScanError(errorCode);
                             }
                         }
                     }
                 });
             }
         };
-
-        public void onScanError(int reason) {
-            mErrorFound = true;
-            switch (reason) {
-                case EpgSyncJobService.ERROR_EPG_SYNC_CANCELED:
-
-                    break;
-                case EpgSyncJobService.ERROR_NO_PROGRAMS:
-                case EpgSyncJobService.ERROR_NO_CHANNELS:
-                    break;
-                default:
-                    break;
-            }
-        }
 
         private void finishScan(boolean scanCompleted) {
             // Hides the cancel button.
@@ -342,7 +327,7 @@ public class TvInputSetupActivity extends Activity {
          * This method will be called when a channel has been completely scanned. It can be overriden
          * to display custom information about this channel to the user.
          *
-         * @param displayName {@link com.google.android.media.tv.companionlibrary.model.Channel#getDisplayName()} for the scanned channel.
+         * @param displayName   {@link com.google.android.media.tv.companionlibrary.model.Channel#getDisplayName()} for the scanned channel.
          * @param displayNumber {@link com.google.android.media.tv.companionlibrary.model.Channel#getDisplayNumber()} ()} for the scanned channel.
          */
         public void onScannedChannel(CharSequence displayName, CharSequence displayNumber) {
@@ -357,7 +342,6 @@ public class TvInputSetupActivity extends Activity {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-
             mInputId = getActivity().getIntent().getStringExtra(TvInputInfo.EXTRA_INPUT_ID);
         }
 
@@ -381,15 +365,19 @@ public class TvInputSetupActivity extends Activity {
             editor.putString(Constants.KEY_PASSWORD, mAccountManager.getPassword(account));
             editor.apply();
 
+            ((Application) getActivity().getApplication()).resetComponents();
+
             EpgSyncJobService.requestImmediateSync(getActivity(), mInputId,
+                    TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS),
                     new ComponentName(getActivity(), EpgSyncJobService.class));
+
+            DvrSyncService.requestImmediateSync(getActivity(), mInputId,
+                    new ComponentName(getActivity(), DvrSyncService.class));
 
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(
                     mSyncStatusChangedReceiver,
                     new IntentFilter(EpgSyncJobService.ACTION_SYNC_STATUS_CHANGED));
         }
-
-
 
         @Override
         public GuidedActionsStylist onCreateActionsStylist() {
@@ -473,22 +461,16 @@ public class TvInputSetupActivity extends Activity {
                 TvUtils.setSetupComplete(getActivity(), true);
 
 
-                if (!mErrorFound) {
-                    EpgSyncJobService.cancelAllSyncRequests(getActivity());
-                    EpgSyncJobService.setUpPeriodicSync(getActivity(), mInputId,
-                            new ComponentName(getActivity(), EpgSyncJobService.class),
-                            FULL_SYNC_FREQUENCY_MILLIS, FULL_SYNC_WINDOW_SEC);
-                    getActivity().setResult(Activity.RESULT_OK);
-                } else {
-                    getActivity().setResult(Activity.RESULT_CANCELED);
-                }
+                EpgSyncJobService.cancelAllSyncRequests(getActivity());
+                EpgSyncJobService.setUpPeriodicSync(getActivity(), mInputId,
+                        new ComponentName(getActivity(), EpgSyncJobService.class),
+                        FULL_SYNC_FREQUENCY_MILLIS, FULL_SYNC_WINDOW_SEC);
+
+                DvrSyncService.cancelAllSyncRequests(getActivity());
+                DvrSyncService.setUpPeriodicSync(getActivity(), mInputId,
+                        new ComponentName(getActivity(), DvrSyncService.class));
 
 
-                // Start the EPG sync service
-                Intent intent = new Intent(getActivity(), EpgSyncJobService.class);
-                getActivity().startService(intent);
-
-                // Wrap up setup
                 getActivity().setResult(Activity.RESULT_OK);
                 getActivity().finish();
             }

@@ -27,7 +27,7 @@ import android.util.Log;
 
 import io.github.johnjcool.dvblink.live.tv.Constants;
 import io.github.johnjcool.dvblink.live.tv.tv.TvUtils;
-import io.github.johnjcool.dvblink.live.tv.tv.service.EpgSyncJobService;
+import io.github.johnjcool.dvblink.live.tv.tv.service.epg.EpgSyncJobService;
 
 
 public class AuthenticatorService extends Service {
