@@ -1,15 +1,18 @@
 package io.github.johnjcool.dvblink.live.tv;
 
 import android.database.ContentObserver;
+import android.database.Cursor;
 import android.media.tv.TvContract;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
+
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
+import java.util.Objects;
+import java.util.Optional;
 
 import io.github.johnjcool.dvblink.live.tv.di.AndroidModule;
 import io.github.johnjcool.dvblink.live.tv.di.DaggerSingletonComponent;
@@ -62,84 +65,70 @@ public class Application extends android.app.Application {
                 if (uri == null) {
                     return;
                 }
-
                 Log.d(TAG, (new StringBuilder())
                         .append("onChange, recordedProgramUri: ")
                         .append(uri)
                         .toString()
                 );
 
-                Map<String, Uri> recordedProgramUriMapFromTif =
-                        TvUtils.getRecordedProgramUriMapFromTif(getContentResolver(), uri);
+                try {
+                    String[] projection = {TvContract.RecordedPrograms._ID, TvContract.RecordedPrograms.COLUMN_INTERNAL_PROVIDER_DATA};
+                    Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
+                    if (cursor == null) { // deleted
+                        deleteRecordedProgramFromRemoteServerAndSharedPreferences(uri);
+                    } else { // added
+                        cursor.moveToNext();
+                        InternalProviderData internalProviderData = new InternalProviderData(cursor.getBlob(1));
+                        addRecordedProgramToSharedPreferences(String.valueOf(internalProviderData.get(Constants.KEY_ORGINAL_OBJECT_ID)), uri);
+                    }
+                } catch (InternalProviderData.ParseException e) {
+                    Log.e(TAG, "Error in method getRecordedProgramUriMapFromTif", e);
+                }
+            }
 
+            private void addRecordedProgramToSharedPreferences(String key, Uri uri) {
                 Map<String, Uri> recordedProgramUriMapFromSharedPreferences =
                         TvUtils.getRecordedProgramUriMapFromSharedPreferences(Application.this);
-
-                final AtomicBoolean added = new AtomicBoolean(false);
-                recordedProgramUriMapFromTif.entrySet()
-                        .stream()
-                        .filter(e -> !recordedProgramUriMapFromSharedPreferences.containsKey(e.getKey()))
-                        .forEach(e -> {
-                            recordedProgramUriMapFromSharedPreferences.put(e.getKey(), e.getValue());
-                            added.set(true);
-                        });
-
-                if (added.get() && TvUtils.updateRecordedProgramUriMapFromSharedPreferences(
+                recordedProgramUriMapFromSharedPreferences.put(key, uri);
+                TvUtils.updateRecordedProgramUriMapFromSharedPreferences(
                         Application.this,
-                        recordedProgramUriMapFromSharedPreferences)) {
-                    Log.i(TAG, (new StringBuilder())
-                            .append("onChange, recordedProgramUri: ")
-                            .append(uri)
-                            .append(" added!")
-                            .toString()
-                    );
-                } else {
-                    Log.w(TAG, (new StringBuilder())
-                            .append("onChange, recordedProgramUri: ")
-                            .append(uri)
-                            .append(" not added!!!!!")
-                            .toString()
-                    );
-                }
-
-                Map<String, Uri> toDeleteMap = recordedProgramUriMapFromSharedPreferences.entrySet()
-                        .stream()
-                        .filter(e -> !recordedProgramUriMapFromTif.containsKey(e.getKey()))
-                        .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
-
-                Log.i(TAG, (new StringBuilder())
-                        .append("onChange, delete ")
-                        .append(toDeleteMap.size())
-                        .append(" records!")
-                        .toString()
+                        recordedProgramUriMapFromSharedPreferences
                 );
+            }
 
+            private void deleteRecordedProgramFromRemoteServerAndSharedPreferences(final Uri uri) {
+                new Thread() {
+                    @Override
+                    public void run() {
+                        try {
+                            Map<String, Uri> recordedProgramUriMapFromSharedPreferences =
+                                    TvUtils.getRecordedProgramUriMapFromSharedPreferences(
+                                            Application.this);
 
-                toDeleteMap.entrySet().forEach(entry -> {
-                    new Thread() {
-                        @Override
-                        public void run() {
-                            try {
-                                Injector.get().dvbLinkClient().removeRecordedProgram(entry.getKey());
-                                Log.i(TAG, (new StringBuilder())
-                                        .append("onChange, object removed from server ")
-                                        .append(entry.getKey())
-                                        .toString()
-                                );
-                            } catch (Exception e) {
-                                Log.e(TAG, new StringBuilder()
-                                        .append("onChange, object could not be removed from server ")
-                                        .append(entry.getKey())
-                                        .toString(), e
+                            Optional<String> objectId = recordedProgramUriMapFromSharedPreferences
+                                    .entrySet()
+                                    .stream()
+                                    .filter(entry -> Objects.equals(entry.getValue(), uri))
+                                    .map(Map.Entry::getKey)
+                                    .findFirst();
+
+                            if (objectId.isPresent()) {
+                                Injector.get().dvbLinkClient().removeRecordedProgram(objectId.get());
+                                recordedProgramUriMapFromSharedPreferences.remove(objectId.get());
+                                TvUtils.updateRecordedProgramUriMapFromSharedPreferences(
+                                        Application.this,
+                                        recordedProgramUriMapFromSharedPreferences
                                 );
                             }
+                        } catch (Exception e) {
+                            Log.e(TAG, new StringBuilder()
+                                    .append("onChange, object could not be removed from server ")
+                                    .append(uri)
+                                    .toString(), e
+                            );
                         }
-                    }.start();
-                    // TODO: remove also from map because of inconsistency
-                    if (recordedProgramUriMapFromSharedPreferences.remove(entry.getKey()) != null) {
-                        TvUtils.updateRecordedProgramUriMapFromSharedPreferences(Application.this, recordedProgramUriMapFromSharedPreferences);
                     }
-                });
+                }.start();
             }
         };
     }
