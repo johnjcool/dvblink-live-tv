@@ -74,12 +74,11 @@ public class Application extends android.app.Application {
                 try {
                     String[] projection = {TvContract.RecordedPrograms._ID, TvContract.RecordedPrograms.COLUMN_INTERNAL_PROVIDER_DATA};
                     Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
-                    if (cursor == null) { // deleted
-                        deleteRecordedProgramFromRemoteServerAndSharedPreferences(uri);
-                    } else { // added
-                        cursor.moveToNext();
+                    if (cursor != null && cursor.moveToNext()) { // added or updated
                         InternalProviderData internalProviderData = new InternalProviderData(cursor.getBlob(1));
                         addRecordedProgramToSharedPreferences(String.valueOf(internalProviderData.get(Constants.KEY_ORGINAL_OBJECT_ID)), uri);
+                    } else { // deleted
+                        deleteRecordedProgramFromRemoteServerAndSharedPreferences(uri);
                     }
                 } catch (InternalProviderData.ParseException e) {
                     Log.e(TAG, "Error in method getRecordedProgramUriMapFromTif", e);
