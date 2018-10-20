@@ -140,7 +140,7 @@ public class RecordingSession extends BaseTvInputService.RecordingSession {
             Schedule schedule = new Schedule(
                     new Schedule.ByEpg(
                             String.valueOf(mChannel.getOriginalNetworkId()),
-                            String.valueOf(program.getInternalProviderData().get(Constants.KEY_ORGINAL_OBJECT_ID))
+                            String.valueOf(program.getInternalProviderData().get(Constants.KEY_ORGINAL_PROGRAM_ID))
                     )
             );
             mRecording = mDvbLinkClient.addSchedule(schedule);

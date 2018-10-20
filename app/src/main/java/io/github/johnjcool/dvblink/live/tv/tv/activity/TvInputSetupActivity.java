@@ -38,8 +38,8 @@ import io.github.johnjcool.dvblink.live.tv.tv.service.epg.EpgSyncJobService;
 public class TvInputSetupActivity extends Activity {
     private static final String TAG = TvInputSetupActivity.class.getName();
 
-    public static final long FULL_SYNC_FREQUENCY_MILLIS = 1000 * 60 * 60 * 24;  // 24 hour
-    public static final long FULL_SYNC_WINDOW_SEC = 1000 * 60 * 60 * 24 * 14;  // 2 weeks
+    public static final long FULL_SYNC_FREQUENCY_MILLIS = TimeUnit.MILLISECONDS.convert(6, TimeUnit.HOURS);
+    public static final long FULL_SYNC_WINDOW_SEC = TimeUnit.MILLISECONDS.convert(14, TimeUnit.DAYS);  // 2 weeks
 
     static AccountManager mAccountManager;
     static Account sAccount;
